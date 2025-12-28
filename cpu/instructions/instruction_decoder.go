@@ -2,8 +2,15 @@ package instructions
 
 import (
 	"bufio"
+	"emulator/cpu"
+	"emulator/memory"
 	"fmt"
 )
+
+// InstructionHandler defines a handler that must implement an execute function.
+type InstructionHandler interface {
+	Execute(*cpu.CPU, *memory.Memory, *DecodedInstruction) error // execute the instruction on the given CPU & Memory.
+}
 
 // Instruction defines an instruction within the 6502 instruction set.
 type Instruction struct {
@@ -21,7 +28,6 @@ type DecodedInstruction struct {
 
 // getInstructionSet returns the set of instructions as a map of Opcode to Instruction.
 func getInstructionSet() map[byte]Instruction {
-
 	return map[byte]Instruction{
 		// ADC - Add with carry
 		0x69: { // ADC #oper
@@ -71,6 +77,12 @@ func getInstructionSet() map[byte]Instruction {
 			Size:    2,
 			Cycles:  5,
 			Handler: ADC(),
+		},
+		0x00: { // BRK
+			Opcode:  0x00,
+			Size:    1,
+			Cycles:  7,
+			Handler: BRK(),
 		},
 	}
 }

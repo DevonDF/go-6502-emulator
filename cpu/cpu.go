@@ -6,25 +6,25 @@ import (
 
 type CPU struct {
 	Accumulator *Accumulator
+	RegisterPC  uint16
+	RegisterAC  int8
+	RegisterX   int8
+	RegisterY   int8
+	RegisterSR  uint8
+	RegisterSP  int8
 
-	rPC    int16
-	rAC    int8
-	rX     int8
-	rY     int8
-	rSR    uint8
-	rSP    int8
 	logger *slog.Logger
 }
 
 // NewCPU creates a new CPU struct and returns it.
 func NewCPU(logger *slog.Logger) *CPU {
 	cpu := &CPU{
-		rPC: 0,
-		rAC: 0,
-		rX:  0,
-		rY:  0,
-		rSR: 0,
-		rSP: 0,
+		RegisterPC: 0,
+		RegisterAC: 0,
+		RegisterX:  0,
+		RegisterY:  0,
+		RegisterSR: 0,
+		RegisterSP: 0,
 
 		logger: logger,
 	}
@@ -34,37 +34,37 @@ func NewCPU(logger *slog.Logger) *CPU {
 
 // GetCarryFlag returns the carry bit flag.
 func (cpu *CPU) GetCarryFlag() uint8 {
-	return cpu.rSR & 0x01
+	return cpu.RegisterSR & 0x01
 }
 
 // GetZeroFlag returns the zero bit flag.
 func (cpu *CPU) GetZeroFlag() uint8 {
-	return (cpu.rSR & 0x02) >> 1
+	return (cpu.RegisterSR & 0x02) >> 1
 }
 
 // GetInterruptFlag returns the interrupt bit flag.
 func (cpu *CPU) GetInterruptFlag() uint8 {
-	return (cpu.rSR & 0x04) >> 2
+	return (cpu.RegisterSR & 0x04) >> 2
 }
 
 // GetDecimalFlag returns the decimal bit flag.
 func (cpu *CPU) GetDecimalFlag() uint8 {
-	return (cpu.rSR & 0x08) >> 3
+	return (cpu.RegisterSR & 0x08) >> 3
 }
 
 // GetBreakFlag returns the break bit flag.
 func (cpu *CPU) GetBreakFlag() uint8 {
-	return (cpu.rSR & 0x10) >> 4
+	return (cpu.RegisterSR & 0x10) >> 4
 }
 
 // GetOverflowFlag returns the overflow bit flag.
 func (cpu *CPU) GetOverflowFlag() uint8 {
-	return (cpu.rSR & 0x40) >> 6
+	return (cpu.RegisterSR & 0x40) >> 6
 }
 
 // GetNegativeFlag returns the negative bit flag.
 func (cpu *CPU) GetNegativeFlag() uint8 {
-	return (cpu.rSR & 0x80) >> 7
+	return (cpu.RegisterSR & 0x80) >> 7
 }
 
 // SetStatusFlags sets the flags for the SR Status Register within the CPU.
@@ -93,9 +93,10 @@ func (cpu *CPU) SetStatusFlags(negative bool, overflow bool, break_ bool, decima
 		newSR = newSR | 0x01
 	}
 
-	cpu.rSR = newSR
+	cpu.RegisterSR = newSR
 }
 
-func (cpu *CPU) LogState() {
-	cpu.logger.Debug("CPU State", "rPC", cpu.rPC, "rAC", cpu.rAC, "rX", cpu.rX, "rY", cpu.rY, "rSR", cpu.rSR, "rSP", cpu.rSP)
+// LogRegisters logs the state of the registers to the debug logger.
+func (cpu *CPU) LogRegisters() {
+	cpu.logger.Debug("CPU registers", "pc", cpu.RegisterPC, "ac", cpu.RegisterAC, "x", cpu.RegisterX, "y", cpu.RegisterY, "sp", cpu.RegisterSP, "sr", cpu.RegisterSR)
 }

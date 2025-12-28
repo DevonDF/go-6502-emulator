@@ -1,6 +1,22 @@
 package memory
 
-import "log/slog"
+import (
+	"bufio"
+	"bytes"
+	"errors"
+	"log/slog"
+)
+
+// $0000–$00FF  Zero Page
+// $0100–$01FF  Stack
+// $0200–$07FF  RAM
+// $8000–$FFFF  ROM
+const (
+	ZeroPageAddress   = 0x0000
+	StackStartAddress = 0x0100
+	RAMStartAddress   = 0x0200
+	ROMStartAddress   = 0x8000
+)
 
 type Memory struct {
 	memory []byte
@@ -13,4 +29,54 @@ func NewMemory(logger *slog.Logger) *Memory {
 		memory: make([]byte, 65536),
 		logger: logger,
 	}
+}
+
+// Write writes to the internal memory at the given offset the provided data in its entirety.
+func (memory *Memory) Write(address uint16, data []byte) error {
+	if int(address)+len(data) > len(memory.memory) {
+		return errors.New("out of bound write")
+	}
+	copy(memory.memory[int(address):], data)
+	return nil
+}
+
+// ReadByte reads a byte at a given memory address.
+func (memory *Memory) ReadByte(address uint16) (byte, error) {
+	if int(address) > len(memory.memory) {
+		return 0x0, errors.New("out of bound read")
+	}
+	return memory.memory[int(address)], nil
+}
+
+// Read reads into the buffer the memory at the provided address until buffer is full.
+func (memory *Memory) Read16(address uint16) (uint16, error) {
+	if int(address)+2 > len(memory.memory) {
+		return 0x0, errors.New("out of bound read")
+	}
+	lo, err := memory.ReadByte(address)
+	if err != nil {
+		return 0x0, err
+	}
+	hi, err := memory.ReadByte(address + 1)
+	if err != nil {
+		return 0x0, err
+	}
+	return uint16(hi)<<8 | uint16(lo), nil
+}
+
+// Read reads into the buffer the memory at the provided address until buffer is full.
+func (memory *Memory) Read(address uint16, buffer *[]byte) error {
+	if int(address)+len(*buffer) > len(memory.memory) {
+		return errors.New("out of bound read")
+	}
+	copy(*buffer, memory.memory[int(address):])
+	return nil
+}
+
+// ReaderAt creates and returns a bufio.Reader at a given memory address.
+func (memory *Memory) ReaderAt(address uint16) (*bufio.Reader, error) {
+	if int(address) > len(memory.memory) {
+		return nil, errors.New("out of bound read")
+	}
+	return bufio.NewReader(bytes.NewReader(memory.memory[int(address):])), nil
 }

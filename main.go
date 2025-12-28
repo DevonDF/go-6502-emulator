@@ -3,6 +3,7 @@ package main
 import (
 	"emulator/emulator"
 	"flag"
+	"fmt"
 )
 
 func main() {
@@ -20,5 +21,11 @@ func main() {
 			Verbose: *verbose,
 		})
 
-	newEmulator.LoadAndExecute(*rom)
+	err := newEmulator.LoadROM(*rom)
+	if err != nil {
+		fmt.Printf("failed to load ROM into memory: %w", err)
+		return
+	}
+
+	newEmulator.StartEmulator()
 }

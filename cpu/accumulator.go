@@ -19,7 +19,7 @@ func NewAccumulator(cpu *CPU, logger *slog.Logger) *Accumulator {
 func (acu *Accumulator) Add(number int8) {
 	// cast these to a larger space, and then analyse the result to
 	// get the carry & overflow flags
-	rAC := int16(acu.cpu.rAC)
+	rAC := int16(acu.cpu.RegisterAC)
 	num := int16(number)
 	carryIn := int16(acu.cpu.GetCarryFlag())
 
@@ -30,9 +30,9 @@ func (acu *Accumulator) Add(number int8) {
 	carryOut := sum > 0x7F || sum < -0x80
 
 	// if the 8th bit is set incorrectly (i.e. a signed overflow occured) then the overflow flag should be set
-	overflowOut := int16(acu.cpu.rAC^result)&int16(number^result)&0x80 != 0x0
+	overflowOut := int16(acu.cpu.RegisterAC^result)&int16(number^result)&0x80 != 0x0
 
-	acu.cpu.rAC = result
+	acu.cpu.RegisterAC = result
 	acu.cpu.SetStatusFlags(result < 0, overflowOut, false, false, false, result == 0, carryOut)
 
 	acu.logger.Debug("acu.Add", "rAC", rAC, "operand", num, "carryIn", carryIn, "result", result, "carryOut", carryOut, "overflowOut", overflowOut)

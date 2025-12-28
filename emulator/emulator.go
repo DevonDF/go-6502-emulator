@@ -1,10 +1,10 @@
 package emulator
 
 import (
-	"bufio"
 	"emulator/cpu"
 	"emulator/cpu/instructions"
 	"emulator/memory"
+	"fmt"
 	"log/slog"
 	"os"
 )
@@ -14,10 +14,11 @@ type EmulatorConfiguration struct {
 }
 
 type Emulator struct {
-	cpu    *cpu.CPU
-	memory *memory.Memory
-	config EmulatorConfiguration
-	logger *slog.Logger
+	cpu     *cpu.CPU
+	memory  *memory.Memory
+	config  EmulatorConfiguration
+	running bool
+	logger  *slog.Logger
 }
 
 // NewEmulator creates a new Emulator with the provided configuration
@@ -32,52 +33,73 @@ func NewEmulator(config EmulatorConfiguration) *Emulator {
 	}))
 
 	return &Emulator{
-		cpu:    cpu.NewCPU(logger),
-		memory: memory.NewMemory(logger),
-		config: config,
-		logger: logger,
+		cpu:     cpu.NewCPU(logger),
+		memory:  memory.NewMemory(logger),
+		config:  config,
+		running: false,
+		logger:  logger,
 	}
 }
 
 // startEmulator runs any startup required when beginning the emulator.
-func (emulator *Emulator) startEmulator() {
+func (emulator *Emulator) StartEmulator() {
 	emulator.logger.Debug("starting emulator")
+	emulator.running = true
+	emulator.cpu.RegisterPC = memory.ROMStartAddress // Set the PC to the start of ROM
+	emulator.cpu.RegisterSP = 0x00                   // Set stack pointer to 0x00
+	emulator.cpu.RegisterX = 0x00                    // Set register X to 0x00
+	emulator.cpu.RegisterY = 0x00                    // Set register Y to 0x00
+	emulator.execute()
 }
 
 // stopEmulator stops the emulator and resets the state if required.
-func (emulator *Emulator) stopEmulator() {
+func (emulator *Emulator) StopEmulator() {
 	emulator.logger.Debug("stopping emulator")
+	emulator.running = false
 }
 
-// LoadAndExecute loads a given ROM at the provided path and executes it within the emulator.
-func (emulator *Emulator) LoadAndExecute(romPath string) {
-	defer emulator.stopEmulator()
-	emulator.startEmulator()
-
-	// Open ROM in a buffered reader
+// LoadROM loads a ROM into memory at 0x8000.
+func (emulator *Emulator) LoadROM(romPath string) error {
 	emulator.logger.Debug("loading ROM", "rom", romPath)
-	rom, err := os.Open(romPath)
+	rom, err := os.ReadFile(romPath)
 	if err != nil {
-		emulator.logger.Error("failed to load ROM", "rom", romPath)
-		return
+		return fmt.Errorf("failed to load ROM %s", romPath)
 	}
-	defer rom.Close()
+	emulator.memory.Write(memory.ROMStartAddress, rom)
+	emulator.logger.Debug("wrote ROM into memory", "size", len(rom))
+	return nil
+}
 
-	reader := bufio.NewReader(rom)
+// execute begins the fetch-decode-execute loop at the PC.
+func (emulator *Emulator) execute() {
+	defer emulator.StopEmulator()
 
 	// Start fetch-decode-execute loop
-	for true {
+	for emulator.running {
+		// Fetch
+		reader, err := emulator.memory.ReaderAt(emulator.cpu.RegisterPC)
+		if err != nil {
+			emulator.logger.Error("failed to fetch instruction from memory", "error", err)
+		}
 
-		// Fetch & decode next instruction
+		// Decode
 		inst, err := instructions.DecodeNextInstruction(reader)
 		if err != nil {
-			emulator.logger.Error("failed to fetch and decode next instruction", "error", err)
+			emulator.logger.Error("failed to decode next instruction", "error", err)
 			return
 		}
-		emulator.logger.Debug("executing instruction", "opcode", inst.Instruction.Opcode, "operands", inst.Operands)
-		inst.Instruction.Handler.Execute(emulator.cpu, emulator.memory, &inst)
 
-		emulator.cpu.LogState()
+		// Execute
+		emulator.logger.Debug("executing instruction", "opcode", inst.Instruction.Opcode, "operands", inst.Operands)
+		err = inst.Instruction.Handler.Execute(emulator.cpu, emulator.memory, &inst)
+		if err != nil {
+			emulator.logger.Error("execution of instruction caused error", "opcode", inst.Instruction.Opcode, "err", err)
+			return
+		}
+
+		// Increment PC
+		emulator.cpu.RegisterPC += uint16(inst.Instruction.Size)
+		emulator.cpu.LogRegisters()
 	}
 
 }
