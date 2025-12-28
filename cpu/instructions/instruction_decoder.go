@@ -161,12 +161,184 @@ func getInstructionSet() map[byte]Instruction {
 			Handler: ASL(),
 		},
 
+		// BCC - Branch on Carry Clear
+		0x90: {
+			Opcode:  0x90,
+			Size:    2,
+			Cycles:  2,
+			Handler: BCC(),
+		},
+
+		// BCS - Branch on Carry Set
+		0xB0: {
+			Opcode:  0xB0,
+			Size:    2,
+			Cycles:  2,
+			Handler: BCS(),
+		},
+
+		// BEQ - Branch on Result Zero
+		0xF0: {
+			Opcode:  0xF0,
+			Size:    2,
+			Cycles:  2,
+			Handler: BEQ(),
+		},
+
+		// BIT - Test Bits in Memory with Accumulator
+		0x24: {
+			Opcode:  0x24,
+			Size:    2,
+			Cycles:  3,
+			Handler: Unimpl(),
+		},
+		0x2C: {
+			Opcode:  0x2C,
+			Size:    2,
+			Cycles:  3,
+			Handler: Unimpl(),
+		},
+
+		// BMI - Branch on Result Minus
+		0x30: {
+			Opcode:  0x30,
+			Size:    2,
+			Cycles:  2,
+			Handler: BMI(),
+		},
+
+		// BNE - Branch on Result not Zero
+		0xD0: {
+			Opcode:  0xD0,
+			Size:    2,
+			Cycles:  2,
+			Handler: BNE(),
+		},
+
+		// BPL - Branch on Result Plus
+		0x10: {
+			Opcode:  0x10,
+			Size:    2,
+			Cycles:  2,
+			Handler: BPL(),
+		},
+
 		// BRK - Break & Interrupt
 		0x00: { // BRK
 			Opcode:  0x00,
 			Size:    1,
 			Cycles:  7,
 			Handler: BRK(),
+		},
+
+		// BVC - Branch on Overflow Clear
+		0x50: {
+			Opcode:  0x50,
+			Size:    2,
+			Cycles:  2,
+			Handler: BVC(),
+		},
+
+		// BVS - Branch on Overflow Set
+		0x70: {
+			Opcode:  0x70,
+			Size:    2,
+			Cycles:  2,
+			Handler: BVS(),
+		},
+
+		// LDA - Load Accumulator with Memory
+		0xA9: {
+			Opcode:  0xA9,
+			Size:    2,
+			Cycles:  2,
+			Handler: LDA(),
+		},
+		0xA5: {
+			Opcode:  0xA5,
+			Size:    2,
+			Cycles:  3,
+			Handler: LDA(),
+		},
+		0xB5: {
+			Opcode:  0xB5,
+			Size:    2,
+			Cycles:  4,
+			Handler: LDA(),
+		},
+		0xAD: {
+			Opcode:  0xAD,
+			Size:    3,
+			Cycles:  4,
+			Handler: LDA(),
+		},
+		0xBD: {
+			Opcode:  0xBD,
+			Size:    3,
+			Cycles:  4,
+			Handler: LDA(),
+		},
+		0xB9: {
+			Opcode:  0xB9,
+			Size:    3,
+			Cycles:  4,
+			Handler: LDA(),
+		},
+		0xA1: {
+			Opcode:  0xA1,
+			Size:    2,
+			Cycles:  6,
+			Handler: LDA(),
+		},
+		0xA2: {
+			Opcode:  0xA2,
+			Size:    2,
+			Cycles:  5,
+			Handler: LDA(),
+		},
+
+		// STA - Store Accumulator in Memory
+		0x85: {
+			Opcode:  0xA9,
+			Size:    2,
+			Cycles:  3,
+			Handler: STA(),
+		},
+		0x95: {
+			Opcode:  0xA5,
+			Size:    2,
+			Cycles:  4,
+			Handler: STA(),
+		},
+		0x8D: {
+			Opcode:  0xB5,
+			Size:    3,
+			Cycles:  4,
+			Handler: STA(),
+		},
+		0x9D: {
+			Opcode:  0xAD,
+			Size:    3,
+			Cycles:  5,
+			Handler: STA(),
+		},
+		0x99: {
+			Opcode:  0xBD,
+			Size:    3,
+			Cycles:  5,
+			Handler: STA(),
+		},
+		0x81: {
+			Opcode:  0xB9,
+			Size:    2,
+			Cycles:  6,
+			Handler: STA(),
+		},
+		0x91: {
+			Opcode:  0xA1,
+			Size:    2,
+			Cycles:  6,
+			Handler: STA(),
 		},
 	}
 }
@@ -187,7 +359,7 @@ func DecodeNextInstruction(reader *bufio.Reader) (DecodedInstruction, error) {
 	operands := make([]byte, instruction.Size-1)
 	_, err = reader.Read(operands)
 	if err != nil {
-		return DecodedInstruction{}, fmt.Errorf("failed to read operands for Opcode %02X: %w", Opcode, err)
+		return DecodedInstruction{}, fmt.Errorf("failed to read operands for opcode %02X: %w", Opcode, err)
 	}
 
 	decodedInstruction := DecodedInstruction{

@@ -66,7 +66,6 @@ func (emulator *Emulator) StartEmulator() {
 	emulator.cpu.RegisterSP = 0x00                   // Set stack pointer to 0x00
 	emulator.cpu.RegisterX = 0x00                    // Set register X to 0x00
 	emulator.cpu.RegisterY = 0x00                    // Set register Y to 0x00
-	emulator.memory.Write(0x0005, []byte{0x0A})
 	emulator.execute()
 }
 

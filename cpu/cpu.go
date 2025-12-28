@@ -79,6 +79,7 @@ func (cpu *CPU) SetStatusFlags(negative bool, overflow bool, break_ bool, decima
 	}
 	if break_ {
 		newSR = newSR | 0x10
+
 	}
 	if decimal {
 		newSR = newSR | 0x08
