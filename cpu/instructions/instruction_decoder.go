@@ -78,6 +78,57 @@ func getInstructionSet() map[byte]Instruction {
 			Cycles:  5,
 			Handler: ADC(),
 		},
+
+		// AND - AND memory with accumulator
+		0x29: { // AND #oper
+			Opcode:  0x29,
+			Size:    2,
+			Cycles:  2,
+			Handler: AND(),
+		},
+		0x25: { // AND oper
+			Opcode:  0x25,
+			Size:    2,
+			Cycles:  3,
+			Handler: AND(),
+		},
+		0x35: { // AND oper,X
+			Opcode:  0x35,
+			Size:    2,
+			Cycles:  4,
+			Handler: AND(),
+		},
+		0x2D: { // AND oper
+			Opcode:  0x2D,
+			Size:    3,
+			Cycles:  4,
+			Handler: AND(),
+		},
+		0x3D: { // AND oper,X
+			Opcode:  0x7D,
+			Size:    3,
+			Cycles:  4,
+			Handler: AND(),
+		},
+		0x39: { // AND oper,Y
+			Opcode:  0x39,
+			Size:    3,
+			Cycles:  4,
+			Handler: AND(),
+		},
+		0x21: { // AND (oper,X)
+			Opcode:  0x21,
+			Size:    2,
+			Cycles:  6,
+			Handler: AND(),
+		},
+		0x31: { // AND (oper),Y
+			Opcode:  0x31,
+			Size:    2,
+			Cycles:  5,
+			Handler: AND(),
+		},
+
 		0x00: { // BRK
 			Opcode:  0x00,
 			Size:    1,

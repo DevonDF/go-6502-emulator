@@ -37,3 +37,12 @@ func (acu *Accumulator) Add(number int8) {
 
 	acu.logger.Debug("acu.Add", "rAC", rAC, "operand", num, "carryIn", carryIn, "result", result, "carryOut", carryOut, "overflowOut", overflowOut)
 }
+
+// And performs a bitwise logic and within the accumulator with the provided operand.
+func (acu *Accumulator) And(operand uint8) {
+	rAC := uint8(acu.cpu.RegisterAC)
+	result := rAC & operand
+	acu.cpu.RegisterAC = int8(result)
+	acu.cpu.SetStatusFlags(result < 0, false, false, false, false, result == 0, false)
+	acu.logger.Debug("acu.And", "rAC", rAC, "operand", operand, "result", result)
+}
