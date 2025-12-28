@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	verbose := flag.Bool("v", false, "enable verbose logs")
+	debug := flag.Bool("debug", false, "enable debug mode")
 	rom := flag.String("rom", "", "ROM file to load and execute in emulator")
 	flag.Parse()
 
@@ -18,7 +18,7 @@ func main() {
 
 	newEmulator := emulator.NewEmulator(
 		emulator.EmulatorConfiguration{
-			Verbose: *verbose,
+			Debug: *debug,
 		})
 
 	err := newEmulator.LoadROM(*rom)

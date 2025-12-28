@@ -10,7 +10,7 @@ import (
 )
 
 type EmulatorConfiguration struct {
-	Verbose bool
+	Debug bool
 }
 
 type Emulator struct {
@@ -24,12 +24,29 @@ type Emulator struct {
 // NewEmulator creates a new Emulator with the provided configuration
 func NewEmulator(config EmulatorConfiguration) *Emulator {
 	loggerLevel := slog.LevelError
-	if config.Verbose {
+	if config.Debug {
 		loggerLevel = slog.LevelDebug
 	}
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: loggerLevel,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			switch v := a.Value.Any().(type) {
+			case int:
+				a.Value = slog.StringValue(fmt.Sprintf("0x%X", v))
+			case int8:
+				a.Value = slog.StringValue(fmt.Sprintf("0x%02X", uint8(v)))
+			case int16:
+				a.Value = slog.StringValue(fmt.Sprintf("0x%04X", uint16(v)))
+			case int32:
+				a.Value = slog.StringValue(fmt.Sprintf("0x%08X", uint32(v)))
+			case int64:
+				a.Value = slog.StringValue(fmt.Sprintf("0x%X", v))
+			case uint, uint8, uint16, uint32, uint64:
+				a.Value = slog.StringValue(fmt.Sprintf("0x%X", a.Value.Uint64()))
+			}
+			return a
+		},
 	}))
 
 	return &Emulator{
@@ -56,6 +73,11 @@ func (emulator *Emulator) StartEmulator() {
 func (emulator *Emulator) StopEmulator() {
 	emulator.logger.Debug("stopping emulator")
 	emulator.running = false
+
+	if emulator.config.Debug {
+		emulator.logger.Debug("dumping memory to memory.dump")
+		os.WriteFile("memory.dump", []byte(emulator.memory.Dump()), 0644)
+	}
 }
 
 // LoadROM loads a ROM into memory at 0x8000.

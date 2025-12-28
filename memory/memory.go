@@ -3,6 +3,7 @@ package memory
 import (
 	"bufio"
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"log/slog"
 )
@@ -37,6 +38,7 @@ func (memory *Memory) Write(address uint16, data []byte) error {
 		return errors.New("out of bound write")
 	}
 	copy(memory.memory[int(address):], data)
+	memory.logger.Debug("wrote memory", "start", address, "end", int(address)+len(data), "size", len(data))
 	return nil
 }
 
@@ -45,6 +47,7 @@ func (memory *Memory) ReadByte(address uint16) (byte, error) {
 	if int(address) > len(memory.memory) {
 		return 0x0, errors.New("out of bound read")
 	}
+	memory.logger.Debug("read byte from memory", "address", address, "value", memory.memory[int(address)])
 	return memory.memory[int(address)], nil
 }
 
@@ -79,4 +82,9 @@ func (memory *Memory) ReaderAt(address uint16) (*bufio.Reader, error) {
 		return nil, errors.New("out of bound read")
 	}
 	return bufio.NewReader(bytes.NewReader(memory.memory[int(address):])), nil
+}
+
+// Dump returns a hexdump of the memory
+func (memory *Memory) Dump() string {
+	return hex.Dump(memory.memory)
 }
