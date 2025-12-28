@@ -6,5 +6,5 @@ import (
 )
 
 type InstructionHandler interface {
-	Execute(*cpu.CPU, *memory.Memory, *DecodedInstruction) // execute the instruction on the given CPU & Memory.
+	Execute(*cpu.CPU, *memory.Memory, *DecodedInstruction) error // execute the instruction on the given CPU & Memory.
 }

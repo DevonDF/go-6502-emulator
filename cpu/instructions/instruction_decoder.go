@@ -7,101 +7,96 @@ import (
 
 // Instruction defines an instruction within the 6502 instruction set.
 type Instruction struct {
-	opcode  byte                // the opcode for the given instruction.
-	size    byte                // the number of bytes this instruction takes.
-	cycles  byte                // the number of cpu cycles this operation takes.
-	handler *InstructionHandler // the handler for this instruction.
+	Opcode  byte               // the Opcode for the given instruction.
+	Size    byte               // the number of bytes this instruction takes.
+	Cycles  byte               // the number of cpu Cycles this operation takes.
+	Handler InstructionHandler // the Handler for this instruction.
 }
 
 // DecodedInstruction defines a decoded instruction within the 6502 instruction set.
 type DecodedInstruction struct {
-	instruction *Instruction // the instruction that this relates to.
-	operands    []byte       // the operands for the given instruction.
+	Instruction *Instruction // the instruction that this relates to.
+	Operands    []byte       // the operands for the given instruction.
 }
 
-// getInstructionSet returns the set of instructions as a map of opcode to Instruction.
+// getInstructionSet returns the set of instructions as a map of Opcode to Instruction.
 func getInstructionSet() map[byte]Instruction {
-	return map[byte]Instruction{
 
-		0x00: { // BRK
-			opcode:  0x00,
-			size:    1,
-			cycles:  7,
-			handler: nil,
+	return map[byte]Instruction{
+		// ADC - Add with carry
+		0x69: { // ADC #oper
+			Opcode:  0x69,
+			Size:    2,
+			Cycles:  2,
+			Handler: ADC(),
 		},
-		0x01: { // ORA x,ind
-			opcode:  0x01,
-			size:    2,
-			cycles:  6,
-			handler: nil,
+		0x65: { // ADC oper
+			Opcode:  0x65,
+			Size:    2,
+			Cycles:  3,
+			Handler: ADC(),
 		},
-		0x05: { // ORA oper
-			opcode:  0x05,
-			size:    2,
-			cycles:  3,
-			handler: nil,
+		0x75: { // ADC oper,X
+			Opcode:  0x75,
+			Size:    2,
+			Cycles:  4,
+			Handler: ADC(),
 		},
-		0x06: { // ASL oper
-			opcode:  0x06,
-			size:    2,
-			cycles:  5,
-			handler: nil,
+		0x6D: { // ADC oper
+			Opcode:  0x6D,
+			Size:    3,
+			Cycles:  4,
+			Handler: ADC(),
 		},
-		0x08: { // PHP
-			opcode:  0x08,
-			size:    1,
-			cycles:  3,
-			handler: nil,
+		0x7D: { // ADC oper,X
+			Opcode:  0x7D,
+			Size:    3,
+			Cycles:  4,
+			Handler: ADC(),
 		},
-		0x09: { // ORA #oper
-			opcode:  0x09,
-			size:    2,
-			cycles:  2,
-			handler: nil,
+		0x79: { // ADC oper,Y
+			Opcode:  0x79,
+			Size:    3,
+			Cycles:  4,
+			Handler: ADC(),
 		},
-		0x0A: { // ASL A
-			opcode:  0x0A,
-			size:    1,
-			cycles:  2,
-			handler: nil,
+		0x61: { // ADC (oper,X)
+			Opcode:  0x61,
+			Size:    2,
+			Cycles:  6,
+			Handler: ADC(),
 		},
-		0x0D: { // ORA oper
-			opcode:  0x0D,
-			size:    3,
-			cycles:  4,
-			handler: nil,
-		},
-		0x0E: { // ASL oper
-			opcode:  0x0E,
-			size:    3,
-			cycles:  6,
-			handler: nil,
+		0x71: { // ADC (oper),Y
+			Opcode:  0x71,
+			Size:    2,
+			Cycles:  5,
+			Handler: ADC(),
 		},
 	}
 }
 
 // DecodeNextInstruction decodes the next instruction from a buffered byte reader and returns a DecodedInstruction.
 func DecodeNextInstruction(reader *bufio.Reader) (DecodedInstruction, error) {
-	opcode, err := reader.ReadByte()
+	Opcode, err := reader.ReadByte()
 	if err != nil {
 		return DecodedInstruction{}, err
 	}
 
 	instructions := getInstructionSet()
-	instruction, found := instructions[opcode]
+	instruction, found := instructions[Opcode]
 	if !found {
-		return DecodedInstruction{}, fmt.Errorf("no opcode found for %02X", opcode)
+		return DecodedInstruction{}, fmt.Errorf("no opcode found for %02X", Opcode)
 	}
 
-	operands := make([]byte, instruction.size-1)
+	operands := make([]byte, instruction.Size-1)
 	_, err = reader.Read(operands)
 	if err != nil {
-		return DecodedInstruction{}, fmt.Errorf("failed to read operands for opcode %02X: %w", opcode, err)
+		return DecodedInstruction{}, fmt.Errorf("failed to read operands for Opcode %02X: %w", Opcode, err)
 	}
 
 	decodedInstruction := DecodedInstruction{
-		instruction: &instruction,
-		operands:    operands,
+		Instruction: &instruction,
+		Operands:    operands,
 	}
 
 	return decodedInstruction, nil

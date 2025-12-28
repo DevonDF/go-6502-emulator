@@ -18,13 +18,13 @@ func TestDecodeNextInstruction_CorrectInstruction(test *testing.T) {
 
 	assert.Equal(test,
 		DecodedInstruction{
-			instruction: &Instruction{
-				opcode:  0x5,
-				size:    2,
-				cycles:  3,
-				handler: nil,
+			Instruction: &Instruction{
+				Opcode:  0x5,
+				Size:    2,
+				Cycles:  3,
+				Handler: nil,
 			},
-			operands: []byte{0x01},
+			Operands: []byte{0x01},
 		},
 		inst)
 }
