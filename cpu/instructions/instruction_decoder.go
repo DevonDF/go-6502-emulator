@@ -81,7 +81,7 @@ func getInstructionSet() map[byte]Instruction {
 }
 
 // DecodeNextInstruction decodes the next instruction from a buffered byte reader and returns a DecodedInstruction.
-func DecodeNextInstruction(reader bufio.Reader) (DecodedInstruction, error) {
+func DecodeNextInstruction(reader *bufio.Reader) (DecodedInstruction, error) {
 	opcode, err := reader.ReadByte()
 	if err != nil {
 		return DecodedInstruction{}, err
