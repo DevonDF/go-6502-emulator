@@ -29,7 +29,7 @@ type DecodedInstruction struct {
 // getInstructionSet returns the set of instructions as a map of Opcode to Instruction.
 func getInstructionSet() map[byte]Instruction {
 	return map[byte]Instruction{
-		// ADC - Add with carry
+		// ADC - Add Memory to Accumulator with Carry
 		0x69: { // ADC #oper
 			Opcode:  0x69,
 			Size:    2,
@@ -79,7 +79,7 @@ func getInstructionSet() map[byte]Instruction {
 			Handler: ADC(),
 		},
 
-		// AND - AND memory with accumulator
+		// AND - AND Memory with Accumulator
 		0x29: { // AND #oper
 			Opcode:  0x29,
 			Size:    2,
@@ -129,6 +129,39 @@ func getInstructionSet() map[byte]Instruction {
 			Handler: AND(),
 		},
 
+		// ASL - Shift Left One Bit (Memory or Accumulator)
+		0x0A: { // ASL A
+			Opcode:  0x0A,
+			Size:    1,
+			Cycles:  2,
+			Handler: ASL(),
+		},
+		0x06: { // ASL oper
+			Opcode:  0x06,
+			Size:    2,
+			Cycles:  5,
+			Handler: ASL(),
+		},
+		0x16: { // ASL oper,X
+			Opcode:  0x16,
+			Size:    2,
+			Cycles:  6,
+			Handler: ASL(),
+		},
+		0x0E: { // ASL oper
+			Opcode:  0x0E,
+			Size:    3,
+			Cycles:  6,
+			Handler: ASL(),
+		},
+		0x1E: { // ASL oper,X
+			Opcode:  0x1E,
+			Size:    3,
+			Cycles:  7,
+			Handler: ASL(),
+		},
+
+		// BRK - Break & Interrupt
 		0x00: { // BRK
 			Opcode:  0x00,
 			Size:    1,

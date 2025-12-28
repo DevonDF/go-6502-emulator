@@ -41,8 +41,20 @@ func (acu *Accumulator) Add(number int8) {
 // And performs a bitwise logic and within the accumulator with the provided operand.
 func (acu *Accumulator) And(operand uint8) {
 	rAC := uint8(acu.cpu.RegisterAC)
-	result := rAC & operand
-	acu.cpu.RegisterAC = int8(result)
+	result := int8(rAC & operand)
+	acu.cpu.RegisterAC = result
 	acu.cpu.SetStatusFlags(result < 0, false, false, false, false, result == 0, false)
 	acu.logger.Debug("acu.And", "rAC", rAC, "operand", operand, "result", result)
+}
+
+// ShiftLeftOneBit shifts the value of AC one bit.
+func (acu *Accumulator) ShiftLeftOneBit() {
+	// cast to larger space so we can observe carry
+	rAC := uint16(acu.cpu.RegisterAC)
+	result := rAC << 1
+	carryOut := (result & 0x100) != 0x00
+
+	acu.cpu.RegisterAC = int8(result)
+	acu.cpu.SetStatusFlags(int8(result) < 0, false, false, false, false, result == 0, carryOut)
+	acu.logger.Debug("acu.ShiftLeftOneBit", "rAC", rAC, "result", result, "carryOut", carryOut)
 }
