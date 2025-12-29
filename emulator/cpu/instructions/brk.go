@@ -1,9 +1,10 @@
 package instructions
 
 import (
-	"emulator/cpu"
-	"emulator/memory"
 	"errors"
+
+	"github.com/DevonDF/go-6502-emulator/emulator/cpu"
+	"github.com/DevonDF/go-6502-emulator/emulator/memory"
 )
 
 type BRKHandler struct {

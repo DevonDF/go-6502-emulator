@@ -1,9 +1,9 @@
 package instructions
 
 import (
-	"emulator/cpu"
-	"emulator/cpu/addressing"
-	"emulator/memory"
+	"github.com/DevonDF/go-6502-emulator/emulator/cpu"
+	"github.com/DevonDF/go-6502-emulator/emulator/cpu/addressing"
+	"github.com/DevonDF/go-6502-emulator/emulator/memory"
 )
 
 type STAHandler struct {

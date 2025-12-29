@@ -1,8 +1,8 @@
 package addressing
 
 import (
-	"emulator/cpu"
-	"emulator/memory"
+	"github.com/DevonDF/go-6502-emulator/emulator/cpu"
+	"github.com/DevonDF/go-6502-emulator/emulator/memory"
 )
 
 // GetZeropageAddress returns the address in memory given by the provided operands using zeropage addressing.

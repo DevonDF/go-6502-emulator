@@ -1,9 +1,10 @@
 package main
 
 import (
-	"emulator/emulator"
 	"flag"
 	"fmt"
+
+	"github.com/DevonDF/go-6502-emulator/emulator"
 )
 
 func main() {

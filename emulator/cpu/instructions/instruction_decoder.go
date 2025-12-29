@@ -2,9 +2,10 @@ package instructions
 
 import (
 	"bufio"
-	"emulator/cpu"
-	"emulator/memory"
 	"fmt"
+
+	"github.com/DevonDF/go-6502-emulator/emulator/cpu"
+	"github.com/DevonDF/go-6502-emulator/emulator/memory"
 )
 
 // InstructionHandler defines a handler that must implement an execute function.

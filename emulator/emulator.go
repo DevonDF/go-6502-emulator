@@ -1,12 +1,13 @@
 package emulator
 
 import (
-	"emulator/cpu"
-	"emulator/cpu/instructions"
-	"emulator/memory"
 	"fmt"
 	"log/slog"
 	"os"
+
+	"github.com/DevonDF/go-6502-emulator/emulator/cpu"
+	"github.com/DevonDF/go-6502-emulator/emulator/cpu/instructions"
+	"github.com/DevonDF/go-6502-emulator/emulator/memory"
 )
 
 type EmulatorConfiguration struct {

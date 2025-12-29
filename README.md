@@ -7,13 +7,13 @@ An **unfinished** emulator for executing binaries written for the 6502 chipset. 
 The emulator can be built and executed using Golang as normal
 
 ```shell
-go build -o 6502-emulator
+go build ./cmd/emulator
 ```
 
 ## Usage
 
 ```
-Usage of 6502-emulator.exe:
+Usage of emulator.exe:
   -debug
         enable debug mode
   -rom string
@@ -27,10 +27,10 @@ The emulator expects you to pass in a ROM/IMG file that will be mapped directly 
 
 With building:
 ```shell
-./6502-emulator -rom program.bin -debug
+./emulator.exe -rom program.bin -debug
 ```
 
 Without building:
 ```shell
-go run . -rom program.bin -debug
+go run ./cmd/emulator -rom program.bin -debug
 ```
