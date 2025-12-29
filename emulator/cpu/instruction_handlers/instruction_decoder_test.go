@@ -1,10 +1,11 @@
-package instructions
+package instruction_handlers
 
 import (
 	"bufio"
 	"bytes"
 	"testing"
 
+	"github.com/DevonDF/go-6502-emulator/instructions"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,11 +19,10 @@ func TestDecodeNextInstruction_CorrectInstruction(test *testing.T) {
 
 	assert.Equal(test,
 		DecodedInstruction{
-			Instruction: &Instruction{
-				Opcode:  0x5,
-				Size:    2,
-				Cycles:  3,
-				Handler: nil,
+			Instruction: &instructions.Instruction{
+				Opcode: 0x5,
+				Size:   2,
+				Cycles: 3,
 			},
 			Operands: []byte{0x01},
 		},

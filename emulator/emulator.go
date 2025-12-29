@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/DevonDF/go-6502-emulator/emulator/cpu"
-	"github.com/DevonDF/go-6502-emulator/emulator/cpu/instructions"
+	"github.com/DevonDF/go-6502-emulator/emulator/cpu/instruction_handlers"
 	"github.com/DevonDF/go-6502-emulator/emulator/memory"
 )
 
@@ -106,7 +106,7 @@ func (emulator *Emulator) execute() {
 		}
 
 		// Decode
-		inst, err := instructions.DecodeNextInstruction(reader)
+		inst, err := instruction_handlers.DecodeNextInstruction(reader)
 		if err != nil {
 			emulator.logger.Error("failed to decode next instruction", "error", err)
 			return
@@ -114,7 +114,7 @@ func (emulator *Emulator) execute() {
 
 		// Execute
 		emulator.logger.Debug("executing instruction", "opcode", inst.Instruction.Opcode, "operands", inst.Operands)
-		err = inst.Instruction.Handler.Execute(emulator.cpu, emulator.memory, &inst)
+		err = inst.Handler.Execute(emulator.cpu, emulator.memory, &inst)
 		if err != nil {
 			emulator.logger.Error("execution of instruction caused error", "opcode", inst.Instruction.Opcode, "err", err)
 			return

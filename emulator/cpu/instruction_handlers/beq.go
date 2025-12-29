@@ -1,22 +1,22 @@
-package instructions
+package instruction_handlers
 
 import (
 	"github.com/DevonDF/go-6502-emulator/emulator/cpu"
 	"github.com/DevonDF/go-6502-emulator/emulator/memory"
 )
 
-type BVCHandler struct {
+type BEQHandler struct {
 }
 
-var bvcHandler = &BVCHandler{}
+var beqHandler = &BEQHandler{}
 
-func BVC() *BVCHandler {
-	return bvcHandler
+func BEQ() *BEQHandler {
+	return beqHandler
 }
 
-func (handler *BVCHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruction *DecodedInstruction) error {
-	// check if V = 0
-	if cpu.GetOverflowFlag() == 0 {
+func (handler *BEQHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruction *DecodedInstruction) error {
+	// check if Z = 1
+	if cpu.GetZeroFlag() == 1 {
 		// jump relative
 		// -2 as the fetch-decode-execute cycle will increment the PC by 2 after this instruction
 		cpu.RegisterPC += (uint16(instruction.Operands[0]) - 2)
