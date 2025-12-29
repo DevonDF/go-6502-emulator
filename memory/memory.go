@@ -27,7 +27,7 @@ type Memory struct {
 // NewMemory creates and returns a new Memory object.
 func NewMemory(logger *slog.Logger) *Memory {
 	return &Memory{
-		memory: make([]byte, 65536),
+		memory: make([]byte, 65536), // 6502 has maximum memory size of 16K due to 16bit PC
 		logger: logger,
 	}
 }

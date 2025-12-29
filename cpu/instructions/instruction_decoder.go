@@ -299,7 +299,7 @@ func getInstructionSet() map[byte]Instruction {
 
 		// STA - Store Accumulator in Memory
 		0x85: {
-			Opcode:  0xA9,
+			Opcode:  0x85,
 			Size:    2,
 			Cycles:  3,
 			Handler: STA(),

@@ -2,6 +2,7 @@ package instructions
 
 import (
 	"emulator/cpu"
+	"emulator/cpu/addressing"
 	"emulator/memory"
 )
 
@@ -22,50 +23,33 @@ func shiftLeftOneBit(val uint8) (uint8, bool) {
 }
 
 func (handler *ASLHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruction *DecodedInstruction) error {
-	var result uint8
-	var carry bool
+	var addr uint16
+	var err error
 
 	switch instruction.Instruction.Opcode {
-
 	case 0x0A: // accumulator	ASL A
 		cpu.Accumulator.ShiftLeftOneBit()
+		return nil // all done within accumulator, should stop here
 
 	case 0x06: // zeropage	ASL oper
-		addr := uint16(instruction.Operands[0])
-		readByte, err := memory.ReadByte(addr)
-		if err != nil {
-			return err
-		}
-		result, carry = shiftLeftOneBit(readByte)
-		memory.Write(addr, []byte{result})
+		addr, err = addressing.GetZeropageAddress(instruction.Operands, cpu, memory)
 
 	case 0x16: // zeropage,X	ASL oper,X
-		addr := uint16(instruction.Operands[0])
-		readByte, err := memory.ReadByte(addr + uint16(cpu.RegisterX))
-		if err != nil {
-			return err
-		}
-		result, carry = shiftLeftOneBit(readByte)
-		memory.Write(addr, []byte{result})
+		addr, err = addressing.GetZeropageXAddress(instruction.Operands, cpu, memory)
 
 	case 0x0E: // absolute	ASL oper
-		addr := uint16(instruction.Operands[1])<<8 | uint16(instruction.Operands[0])
-		readByte, err := memory.ReadByte(addr)
-		if err != nil {
-			return err
-		}
-		result, carry = shiftLeftOneBit(readByte)
-		memory.Write(addr, []byte{result})
+		addr, err = addressing.GetAbsoluteAddress(instruction.Operands, cpu, memory)
 
 	case 0x1E: // absolute,X	ASL oper,X
-		addr := uint16(instruction.Operands[1])<<8 | uint16(instruction.Operands[0])
-		readByte, err := memory.ReadByte(addr + uint16(cpu.RegisterX))
-		if err != nil {
-			return err
-		}
-		result, carry = shiftLeftOneBit(readByte)
-		memory.Write(addr, []byte{result})
+		addr, err = addressing.GetAbsoluteXAddress(instruction.Operands, cpu, memory)
 	}
+
+	readByte, err := memory.ReadByte(addr)
+	if err != nil {
+		return err
+	}
+	result, carry := shiftLeftOneBit(readByte)
+	memory.Write(addr, []byte{result})
 
 	cpu.SetStatusFlags(int8(result) < 0, false, false, false, false, result == 0, carry)
 	return nil

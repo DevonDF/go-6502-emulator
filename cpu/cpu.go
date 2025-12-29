@@ -4,6 +4,7 @@ import (
 	"log/slog"
 )
 
+// CPU holds the CPU registers and an ACU for mathematical & bitwise operations.
 type CPU struct {
 	Accumulator *Accumulator
 	RegisterPC  uint16
@@ -79,7 +80,6 @@ func (cpu *CPU) SetStatusFlags(negative bool, overflow bool, break_ bool, decima
 	}
 	if break_ {
 		newSR = newSR | 0x10
-
 	}
 	if decimal {
 		newSR = newSR | 0x08

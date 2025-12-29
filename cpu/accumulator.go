@@ -2,6 +2,7 @@ package cpu
 
 import "log/slog"
 
+// Accumulator handles mathematical & bitwise operations within the ACU unit and AC register.
 type Accumulator struct {
 	cpu    *CPU
 	logger *slog.Logger
