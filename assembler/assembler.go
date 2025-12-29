@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/DevonDF/go-6502-emulator/instructions"
+	"github.com/DevonDF/go-6502-emulator/emulator/cpu/instructions"
 )
 
 // assembleLine takes a line from assembley code and assembles it into bytecode.

@@ -21,11 +21,12 @@ const (
 
 // Instruction defines an instruction within the 6502 instruction set.
 type Instruction struct {
-	AssemblyString string         // the assembly string for this instruction, e.g. AND, ADD, etc.
-	Opcode         byte           // the opcode for the given instruction.
-	Size           byte           // the number of bytes this instruction takes.
-	AddressingMode AddressingMode // the addressing mode for this instruction.
-	Cycles         byte           // the number of cpu cycles this operation takes.
+	AssemblyString string             // the assembly string for this instruction, e.g. AND, ADD, etc.
+	Opcode         byte               // the opcode for the given instruction.
+	Size           byte               // the number of bytes this instruction takes.
+	AddressingMode AddressingMode     // the addressing mode for this instruction.
+	Cycles         byte               // the number of cpu cycles this operation takes.
+	Handler        InstructionHandler // the handler to execute this instruction
 }
 
 var instructionSet = [256]Instruction{
@@ -36,6 +37,7 @@ var instructionSet = [256]Instruction{
 		Size:           2,
 		AddressingMode: AddrImmediate,
 		Cycles:         2,
+		Handler:        ADC(),
 	},
 	0x65: { // ADC oper
 		AssemblyString: "ADC",
@@ -43,6 +45,7 @@ var instructionSet = [256]Instruction{
 		Size:           2,
 		AddressingMode: AddrZeropage,
 		Cycles:         3,
+		Handler:        ADC(),
 	},
 	0x75: { // ADC oper,X
 		AssemblyString: "ADC",
@@ -50,6 +53,7 @@ var instructionSet = [256]Instruction{
 		Size:           2,
 		AddressingMode: AddrZeropageX,
 		Cycles:         4,
+		Handler:        ADC(),
 	},
 	0x6D: { // ADC oper
 		AssemblyString: "ADC",
@@ -57,6 +61,7 @@ var instructionSet = [256]Instruction{
 		Size:           3,
 		AddressingMode: AddrAbsolute,
 		Cycles:         4,
+		Handler:        ADC(),
 	},
 	0x7D: { // ADC oper,X
 		AssemblyString: "ADC",
@@ -64,6 +69,7 @@ var instructionSet = [256]Instruction{
 		Size:           3,
 		AddressingMode: AddrAbsoluteX,
 		Cycles:         4,
+		Handler:        ADC(),
 	},
 	0x79: { // ADC oper,Y
 		AssemblyString: "ADC",
@@ -71,6 +77,7 @@ var instructionSet = [256]Instruction{
 		Size:           3,
 		AddressingMode: AddrAbsoluteY,
 		Cycles:         4,
+		Handler:        ADC(),
 	},
 	0x61: { // ADC (oper,X)
 		AssemblyString: "ADC",
@@ -78,6 +85,7 @@ var instructionSet = [256]Instruction{
 		Size:           2,
 		AddressingMode: AddrIndirectX,
 		Cycles:         6,
+		Handler:        ADC(),
 	},
 	0x71: { // ADC (oper),Y
 		AssemblyString: "ADC",
@@ -85,6 +93,7 @@ var instructionSet = [256]Instruction{
 		Size:           2,
 		AddressingMode: AddrIndirectY,
 		Cycles:         5,
+		Handler:        ADC(),
 	},
 
 	// AND - AND Memory with Accumulator
@@ -92,109 +101,155 @@ var instructionSet = [256]Instruction{
 		AssemblyString: "AND",
 		Opcode:         0x29,
 		Size:           2,
+		AddressingMode: AddrImmediate,
 		Cycles:         2,
+		Handler:        AND(),
 	},
 	0x25: { // AND oper
 		AssemblyString: "AND",
 		Opcode:         0x25,
 		Size:           2,
+		AddressingMode: AddrZeropage,
 		Cycles:         3,
+		Handler:        AND(),
 	},
 	0x35: { // AND oper,X
 		AssemblyString: "AND",
 		Opcode:         0x35,
 		Size:           2,
+		AddressingMode: AddrZeropageX,
 		Cycles:         4,
+		Handler:        AND(),
 	},
 	0x2D: { // AND oper
 		AssemblyString: "AND",
 		Opcode:         0x2D,
 		Size:           3,
+		AddressingMode: AddrAbsolute,
 		Cycles:         4,
+		Handler:        AND(),
 	},
 	0x3D: { // AND oper,X
 		AssemblyString: "AND",
 		Opcode:         0x7D,
 		Size:           3,
+		AddressingMode: AddrAbsoluteX,
 		Cycles:         4,
+		Handler:        AND(),
 	},
 	0x39: { // AND oper,Y
 		AssemblyString: "AND",
 		Opcode:         0x39,
 		Size:           3,
+		AddressingMode: AddrAbsoluteY,
 		Cycles:         4,
+		Handler:        AND(),
 	},
 	0x21: { // AND (oper,X)
 		AssemblyString: "AND",
 		Opcode:         0x21,
 		Size:           2,
+		AddressingMode: AddrIndirectX,
 		Cycles:         6,
+		Handler:        AND(),
 	},
 	0x31: { // AND (oper),Y
 		AssemblyString: "AND",
 		Opcode:         0x31,
 		Size:           2,
+		AddressingMode: AddrIndirectY,
 		Cycles:         5,
+		Handler:        AND(),
 	},
 
 	// ASL - Shift Left One Bit (Memory or Accumulator)
 	0x0A: { // ASL A
-		Opcode: 0x0A,
-		Size:   1,
-		Cycles: 2,
+		AssemblyString: "ASL",
+		Opcode:         0x0A,
+		Size:           1,
+		AddressingMode: AddrAccumulator,
+		Cycles:         2,
+		Handler:        ASL(),
 	},
 	0x06: { // ASL oper
-		Opcode: 0x06,
-		Size:   2,
-		Cycles: 5,
+		AssemblyString: "ASL",
+		Opcode:         0x06,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         5,
+		Handler:        ASL(),
 	},
 	0x16: { // ASL oper,X
-		Opcode: 0x16,
-		Size:   2,
-		Cycles: 6,
+		AssemblyString: "ASL",
+		Opcode:         0x16,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         6,
+		Handler:        ASL(),
 	},
 	0x0E: { // ASL oper
-		Opcode: 0x0E,
-		Size:   3,
-		Cycles: 6,
+		AssemblyString: "ASL",
+		Opcode:         0x0E,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         6,
+		Handler:        ASL(),
 	},
 	0x1E: { // ASL oper,X
-		Opcode: 0x1E,
-		Size:   3,
-		Cycles: 7,
+		AssemblyString: "ASL",
+		Opcode:         0x1E,
+		Size:           3,
+		AddressingMode: AddrAbsoluteX,
+		Cycles:         7,
+		Handler:        ASL(),
 	},
 
 	// BCC - Branch on Carry Clear
 	0x90: {
-		Opcode: 0x90,
-		Size:   2,
-		Cycles: 2,
+		AssemblyString: "BCC",
+		Opcode:         0x90,
+		Size:           2,
+		AddressingMode: AddrRelative,
+		Cycles:         2,
+		Handler:        BCC(),
 	},
 
 	// BCS - Branch on Carry Set
 	0xB0: {
-		Opcode: 0xB0,
-		Size:   2,
-		Cycles: 2,
+		AssemblyString: "BCS",
+		Opcode:         0xB0,
+		Size:           2,
+		AddressingMode: AddrRelative,
+		Cycles:         2,
+		Handler:        BCS(),
 	},
 
 	// BEQ - Branch on Result Zero
 	0xF0: {
-		Opcode: 0xF0,
-		Size:   2,
-		Cycles: 2,
+		AssemblyString: "BEQ",
+		Opcode:         0xF0,
+		Size:           2,
+		AddressingMode: AddrRelative,
+		Cycles:         2,
+		Handler:        BEQ(),
 	},
 
 	// BIT - Test Bits in Memory with Accumulator
 	0x24: {
-		Opcode: 0x24,
-		Size:   2,
-		Cycles: 3,
+		AssemblyString: "BIT",
+		Opcode:         0x24,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        Unimpl(),
 	},
 	0x2C: {
-		Opcode: 0x2C,
-		Size:   2,
-		Cycles: 3,
+		AssemblyString: "BIT",
+		Opcode:         0x2C,
+		Size:           2,
+		AddressingMode: AddrAbsolute,
+		Cycles:         3,
+		Handler:        Unimpl(),
 	},
 
 	// BMI - Branch on Result Minus
@@ -283,39 +338,60 @@ var instructionSet = [256]Instruction{
 
 	// STA - Store Accumulator in Memory
 	0x85: {
-		Opcode: 0x85,
-		Size:   2,
-		Cycles: 3,
+		AssemblyString: "STA",
+		Opcode:         0x85,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        STA(),
 	},
 	0x95: {
-		Opcode: 0xA5,
-		Size:   2,
-		Cycles: 4,
+		AssemblyString: "STA",
+		Opcode:         0xA5,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         4,
+		Handler:        STA(),
 	},
 	0x8D: {
-		Opcode: 0xB5,
-		Size:   3,
-		Cycles: 4,
+		AssemblyString: "STA",
+		Opcode:         0x8D,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         4,
+		Handler:        STA(),
 	},
 	0x9D: {
-		Opcode: 0xAD,
-		Size:   3,
-		Cycles: 5,
+		AssemblyString: "STA",
+		Opcode:         0x9D,
+		Size:           3,
+		AddressingMode: AddrAbsoluteX,
+		Cycles:         5,
+		Handler:        STA(),
 	},
 	0x99: {
-		Opcode: 0xBD,
-		Size:   3,
-		Cycles: 5,
+		AssemblyString: "STA",
+		Opcode:         0x99,
+		Size:           3,
+		AddressingMode: AddrAbsoluteY,
+		Cycles:         5,
+		Handler:        STA(),
 	},
 	0x81: {
-		Opcode: 0xB9,
-		Size:   2,
-		Cycles: 6,
+		AssemblyString: "STA",
+		Opcode:         0x81,
+		Size:           2,
+		AddressingMode: AddrIndirectX,
+		Cycles:         6,
+		Handler:        STA(),
 	},
 	0x91: {
-		Opcode: 0xA1,
-		Size:   2,
-		Cycles: 6,
+		AssemblyString: "STA",
+		Opcode:         0x91,
+		Size:           2,
+		AddressingMode: AddrIndirectY,
+		Cycles:         6,
+		Handler:        STA(),
 	},
 }
 

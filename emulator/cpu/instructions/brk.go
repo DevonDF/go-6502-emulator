@@ -1,4 +1,4 @@
-package instruction_handlers
+package instructions
 
 import (
 	"errors"

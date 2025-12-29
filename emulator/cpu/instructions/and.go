@@ -1,4 +1,4 @@
-package instruction_handlers
+package instructions
 
 import (
 	"github.com/DevonDF/go-6502-emulator/emulator/cpu"
