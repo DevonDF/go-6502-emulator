@@ -4,8 +4,7 @@ package instructions
 type AddressingMode byte
 
 const (
-	AddrNone AddressingMode = iota
-	AddrAccumulator
+	AddrAccumulator AddressingMode = iota
 	AddrAbsolute
 	AddrAbsoluteX
 	AddrAbsoluteY
@@ -255,30 +254,39 @@ var instructionSet = [256]Instruction{
 
 	// BMI - Branch on Result Minus
 	0x30: {
-		Opcode: 0x30,
-		Size:   2,
-		Cycles: 2,
+		AssemblyString: "BMI",
+		Opcode:         0x30,
+		Size:           2,
+		AddressingMode: AddrRelative,
+		Cycles:         2,
+		Handler:        BMI(),
 	},
 
 	// BNE - Branch on Result not Zero
 	0xD0: {
-		Opcode: 0xD0,
-		Size:   2,
-		Cycles: 2,
+		AssemblyString: "BNE",
+		Opcode:         0xD0,
+		Size:           2,
+		AddressingMode: AddrRelative,
+		Cycles:         2,
+		Handler:        BNE(),
 	},
 
 	// BPL - Branch on Result Plus
 	0x10: {
-		Opcode: 0x10,
-		Size:   2,
-		Cycles: 2,
+		AssemblyString: "BPL",
+		Opcode:         0x10,
+		Size:           2,
+		AddressingMode: AddrRelative,
+		Cycles:         2,
+		Handler:        BPL(),
 	},
 
 	// BRK - Break & Interrupt
 	0x00: { // BRK
 		AssemblyString: "BRK",
 		Opcode:         0x00,
-		AddressingMode: AddrNone,
+		AddressingMode: AddrImplied,
 		Size:           1,
 		Cycles:         7,
 		Handler:        BRK(),
@@ -286,58 +294,88 @@ var instructionSet = [256]Instruction{
 
 	// BVC - Branch on Overflow Clear
 	0x50: {
-		Opcode: 0x50,
-		Size:   2,
-		Cycles: 2,
+		AssemblyString: "BVC",
+		Opcode:         0x50,
+		Size:           2,
+		AddressingMode: AddrRelative,
+		Cycles:         2,
+		Handler:        BVC(),
 	},
 
 	// BVS - Branch on Overflow Set
 	0x70: {
-		Opcode: 0x70,
-		Size:   2,
-		Cycles: 2,
+		AssemblyString: "BVS",
+		Opcode:         0x70,
+		Size:           2,
+		AddressingMode: AddrRelative,
+		Cycles:         2,
+		Handler:        BVS(),
 	},
 
 	// LDA - Load Accumulator with Memory
 	0xA9: {
-		Opcode: 0xA9,
-		Size:   2,
-		Cycles: 2,
+		AssemblyString: "LDA",
+		Opcode:         0xA9,
+		Size:           2,
+		AddressingMode: AddrImmediate,
+		Cycles:         2,
+		Handler:        LDA(),
 	},
 	0xA5: {
-		Opcode: 0xA5,
-		Size:   2,
-		Cycles: 3,
+		AssemblyString: "LDA",
+		Opcode:         0xA5,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        LDA(),
 	},
 	0xB5: {
-		Opcode: 0xB5,
-		Size:   2,
-		Cycles: 4,
+		AssemblyString: "LDA",
+		Opcode:         0xB5,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         4,
+		Handler:        LDA(),
 	},
 	0xAD: {
-		Opcode: 0xAD,
-		Size:   3,
-		Cycles: 4,
+		AssemblyString: "LDA",
+		Opcode:         0xAD,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         4,
+		Handler:        LDA(),
 	},
 	0xBD: {
-		Opcode: 0xBD,
-		Size:   3,
-		Cycles: 4,
+		AssemblyString: "LDA",
+		Opcode:         0xBD,
+		Size:           3,
+		AddressingMode: AddrAbsoluteX,
+		Cycles:         4,
+		Handler:        LDA(),
 	},
 	0xB9: {
-		Opcode: 0xB9,
-		Size:   3,
-		Cycles: 4,
+		AssemblyString: "LDA",
+		Opcode:         0xB9,
+		Size:           3,
+		AddressingMode: AddrAbsoluteY,
+		Cycles:         4,
+		Handler:        LDA(),
 	},
 	0xA1: {
-		Opcode: 0xA1,
-		Size:   2,
-		Cycles: 6,
+		AssemblyString: "LDA",
+		Opcode:         0xA1,
+		Size:           2,
+		AddressingMode: AddrIndirectX,
+		Cycles:         6,
+		Handler:        LDA(),
 	},
 	0xA2: {
-		Opcode: 0xA2,
-		Size:   2,
-		Cycles: 5,
+		AssemblyString: "LDA",
+		Opcode:         0xA2,
+		Size:           2,
+		AddressingMode: AddrIndirectY,
+		Cycles:         5,
+		Handler:        LDA(),
 	},
 
 	// STA - Store Accumulator in Memory
@@ -351,7 +389,7 @@ var instructionSet = [256]Instruction{
 	},
 	0x95: {
 		AssemblyString: "STA",
-		Opcode:         0xA5,
+		Opcode:         0x95,
 		Size:           2,
 		AddressingMode: AddrZeropageX,
 		Cycles:         4,
@@ -396,6 +434,16 @@ var instructionSet = [256]Instruction{
 		AddressingMode: AddrIndirectY,
 		Cycles:         6,
 		Handler:        STA(),
+	},
+
+	// TAX - Transfer Accumulator to Index X
+	0xAA: {
+		AssemblyString: "TAX",
+		Opcode:         0xAA,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        TAX(),
 	},
 }
 

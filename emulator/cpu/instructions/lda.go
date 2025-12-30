@@ -48,6 +48,8 @@ func (handler *LDAHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruct
 	if err != nil {
 		return err
 	}
+
 	cpu.RegisterAC = int8(value)
+	cpu.SetStatusFlags(cpu.RegisterAC < 0, false, false, false, false, cpu.RegisterAC == 0, false)
 	return nil
 }

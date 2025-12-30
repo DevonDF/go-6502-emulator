@@ -1,4 +1,4 @@
-ADC #&01
+LDA #&01
 AND #&01
 BEQ .success
 .fail

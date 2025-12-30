@@ -18,7 +18,8 @@ func (handler *BNEHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruct
 	// check if Z = 0
 	if cpu.GetZeroFlag() == 0 {
 		// jump relative
-		cpu.RegisterPC += uint16(instruction.Operands[0])
+		// cast the register & operand to SIGNED int32 such that negatives work here
+		cpu.RegisterPC = uint16(int32(cpu.RegisterPC) + int32(int8(instruction.Operands[0])))
 	}
 	return nil
 }

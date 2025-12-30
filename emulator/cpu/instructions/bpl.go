@@ -18,7 +18,8 @@ func (handler *BPLHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruct
 	// check if N = 0
 	if cpu.GetNegativeFlag() == 0 {
 		// jump relative
-		cpu.RegisterPC += uint16(instruction.Operands[0])
+		// cast the register & operand to SIGNED int32 such that negatives work here
+		cpu.RegisterPC = uint16(int32(cpu.RegisterPC) + int32(instruction.Operands[0]))
 	}
 	return nil
 }

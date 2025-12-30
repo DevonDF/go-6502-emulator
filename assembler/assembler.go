@@ -29,22 +29,37 @@ func NewAssembler() *Assembler {
 func (assembler *Assembler) getAddressingMode(operands string) (instructions.AddressingMode, error) {
 	var addressingMode instructions.AddressingMode
 
-	if operands == "A" { // accumulator addressing
+	if operands == "" { // implied addressing, i.e. no operands
+		addressingMode = instructions.AddrImplied
+	} else if operands == "A" { // accumulator addressing
 		addressingMode = instructions.AddrAccumulator
 	} else if operands[0] == '.' { // relative addressing - label
 		addressingMode = instructions.AddrRelative
 	} else if operands[0] == '#' { // immediate addressing
 		addressingMode = instructions.AddrImmediate
 	} else if operands[0] == '&' { // zeropage/absolute
-		commaFound := strings.Contains(operands, ",")
+		beforeComma, afterComma, commaFound := strings.Cut(operands, ",")
 		if !commaFound {
 			if len(operands) == 3 { // zeropage addressing
 				addressingMode = instructions.AddrZeropage
 			} else { // absolute addressing
 				addressingMode = instructions.AddrAbsolute
 			}
-		} else { // X/Y registers used, disgusting
-			return 0x0, fmt.Errorf("unimplemented use of addressing mode: %s", operands)
+		} else { // X/Y zeropage or absolute addressing
+			isZeroPage := len(beforeComma) == 3
+			isAbsolute := !isZeroPage
+
+			if isZeroPage && afterComma == "X" {
+				addressingMode = instructions.AddrZeropageX
+			} else if isZeroPage && afterComma == "Y" {
+				addressingMode = instructions.AddrAbsoluteY
+			} else if isAbsolute && afterComma == "X" {
+				addressingMode = instructions.AddrAbsoluteX
+			} else if isAbsolute && afterComma == "Y" {
+				addressingMode = instructions.AddrAbsoluteY
+			} else {
+				return 0x0, fmt.Errorf("unrecognised addressing mode: %s", operands)
+			}
 		}
 	} else if operands[0] == '(' { // indirect addressing
 		return 0x0, fmt.Errorf("unimplemented use of addressing mode: %s", operands)
@@ -61,7 +76,7 @@ func (assembler *Assembler) getInstructionFromAssemblyLine(line string) (*Encode
 	assemblyString, operands, found := strings.Cut(line, " ")
 	if !found {
 		// command with no operand?
-		instruction := instructions.InstructionFromAssembly(assemblyString, instructions.AddrNone)
+		instruction := instructions.InstructionFromAssembly(assemblyString, instructions.AddrImplied)
 		if instruction != nil {
 			return &EncodedInstruction{
 				assembly:    line,
