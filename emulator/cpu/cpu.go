@@ -68,6 +68,41 @@ func (cpu *CPU) GetNegativeFlag() uint8 {
 	return (cpu.RegisterSR & 0x80) >> 7
 }
 
+// SetCarryFlag sets the carry bit flag.
+func (cpu *CPU) SetCarryFlag(bit bool) {
+	cpu.RegisterSR = cpu.RegisterSR | 0x01
+}
+
+// SetZeroFlag sets the zero bit flag.
+func (cpu *CPU) SetZeroFlag(bit bool) {
+	cpu.RegisterSR = cpu.RegisterSR | 0x02
+}
+
+// SetInterruptFlag sets the interrupt bit flag.
+func (cpu *CPU) SetInterruptFlag(bit bool) {
+	cpu.RegisterSR = cpu.RegisterSR | 0x04
+}
+
+// SetDecimalFlag sets the decimal bit flag.
+func (cpu *CPU) SetDecimalFlag(bit bool) {
+	cpu.RegisterSR = cpu.RegisterSR | 0x08
+}
+
+// SetBreakFlag sets the break bit flag.
+func (cpu *CPU) SetBreakFlag(bit bool) {
+	cpu.RegisterSR = cpu.RegisterSR | 0x10
+}
+
+// SetOverflowFlag sets the overflow bit flag.
+func (cpu *CPU) SetOverflowFlag(bit bool) {
+	cpu.RegisterSR = cpu.RegisterSR | 0x40
+}
+
+// SetNegativeFlag sets the negative bit flag.
+func (cpu *CPU) SetNegativeFlag(bit bool) {
+	cpu.RegisterSR = cpu.RegisterSR | 0x80
+}
+
 // SetStatusFlags sets the flags for the SR Status Register within the CPU.
 func (cpu *CPU) SetStatusFlags(negative bool, overflow bool, break_ bool, decimal bool, interrupt bool, zero bool, carry bool) {
 	newSR := uint8(0)

@@ -34,7 +34,9 @@ func (acu *Accumulator) Add(number int8) {
 	overflowOut := int16(acu.cpu.RegisterAC^result)&int16(number^result)&0x80 != 0x0
 
 	acu.cpu.RegisterAC = result
-	acu.cpu.SetStatusFlags(result < 0, overflowOut, false, false, false, result == 0, carryOut)
+	acu.cpu.SetNegativeFlag(result < 0)
+	acu.cpu.SetZeroFlag(result == 0)
+	acu.cpu.SetCarryFlag(carryOut)
 
 	acu.logger.Debug("acu.Add", "rAC", rAC, "operand", num, "carryIn", carryIn, "result", result, "carryOut", carryOut, "overflowOut", overflowOut)
 }
@@ -44,7 +46,8 @@ func (acu *Accumulator) And(operand uint8) {
 	rAC := uint8(acu.cpu.RegisterAC)
 	result := int8(rAC & operand)
 	acu.cpu.RegisterAC = result
-	acu.cpu.SetStatusFlags(result < 0, false, false, false, false, result == 0, false)
+	acu.cpu.SetNegativeFlag(result < 0)
+	acu.cpu.SetZeroFlag(result == 0)
 	acu.logger.Debug("acu.And", "rAC", rAC, "operand", operand, "result", result)
 }
 
@@ -56,6 +59,8 @@ func (acu *Accumulator) ShiftLeftOneBit() {
 	carryOut := (result & 0x100) != 0x00
 
 	acu.cpu.RegisterAC = int8(result)
-	acu.cpu.SetStatusFlags(int8(result) < 0, false, false, false, false, result == 0, carryOut)
+	acu.cpu.SetNegativeFlag(int8(result) < 0)
+	acu.cpu.SetZeroFlag(result == 0)
+	acu.cpu.SetCarryFlag(carryOut)
 	acu.logger.Debug("acu.ShiftLeftOneBit", "rAC", rAC, "result", result, "carryOut", carryOut)
 }

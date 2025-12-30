@@ -312,6 +312,112 @@ var instructionSet = [256]Instruction{
 		Handler:        BVS(),
 	},
 
+	// CLC - Clear Carry Flag
+	0x18: {
+		AssemblyString: "CLC",
+		Opcode:         0x18,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        CLC(),
+	},
+
+	// CLD - Clear Decimal Mode
+	0xD8: {
+		AssemblyString: "CLD",
+		Opcode:         0xD8,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        CLD(),
+	},
+
+	// CLI - Clear Interrupt Disable Bit
+	0x58: {
+		AssemblyString: "CLI",
+		Opcode:         0x58,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        CLI(),
+	},
+
+	// CLV - Clear Overflow Flag
+	0xB8: {
+		AssemblyString: "CLV",
+		Opcode:         0xB8,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        CLV(),
+	},
+
+	// CMP - Compare Memory with Accumulator
+	0xC9: {
+		AssemblyString: "CMP",
+		Opcode:         0xC9,
+		Size:           2,
+		AddressingMode: AddrImmediate,
+		Cycles:         2,
+		Handler:        CMP(),
+	},
+	0xC5: {
+		AssemblyString: "CMP",
+		Opcode:         0xC5,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        CMP(),
+	},
+	0xD5: {
+		AssemblyString: "CMP",
+		Opcode:         0xD5,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         4,
+		Handler:        CMP(),
+	},
+	0xCD: {
+		AssemblyString: "CMP",
+		Opcode:         0xCD,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         4,
+		Handler:        CMP(),
+	},
+	0xDD: {
+		AssemblyString: "CMP",
+		Opcode:         0xDD,
+		Size:           3,
+		AddressingMode: AddrAbsoluteX,
+		Cycles:         4,
+		Handler:        CMP(),
+	},
+	0xD9: {
+		AssemblyString: "CMP",
+		Opcode:         0xD9,
+		Size:           3,
+		AddressingMode: AddrAbsoluteY,
+		Cycles:         4,
+		Handler:        CMP(),
+	},
+	0xC1: {
+		AssemblyString: "CMP",
+		Opcode:         0xC1,
+		Size:           2,
+		AddressingMode: AddrIndirectX,
+		Cycles:         6,
+		Handler:        CMP(),
+	},
+	0xD1: {
+		AssemblyString: "CMP",
+		Opcode:         0xD1,
+		Size:           2,
+		AddressingMode: AddrIndirectY,
+		Cycles:         5,
+		Handler:        CMP(),
+	},
+
 	// LDA - Load Accumulator with Memory
 	0xA9: {
 		AssemblyString: "LDA",

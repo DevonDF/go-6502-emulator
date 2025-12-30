@@ -2,7 +2,6 @@ package instructions
 
 import (
 	"github.com/DevonDF/go-6502-emulator/emulator/cpu"
-	"github.com/DevonDF/go-6502-emulator/emulator/cpu/addressing"
 	"github.com/DevonDF/go-6502-emulator/emulator/memory"
 )
 
@@ -23,25 +22,9 @@ func shiftLeftOneBit(val uint8) (uint8, bool) {
 }
 
 func (handler *ASLHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruction *DecodedInstruction) error {
-	var addr uint16
-	var err error
-
-	switch instruction.Instruction.Opcode {
-	case 0x0A: // accumulator	ASL A
-		cpu.Accumulator.ShiftLeftOneBit()
-		return nil // all done within accumulator, should stop here
-
-	case 0x06: // zeropage	ASL oper
-		addr, err = addressing.GetZeropageAddress(instruction.Operands, cpu, memory)
-
-	case 0x16: // zeropage,X	ASL oper,X
-		addr, err = addressing.GetZeropageXAddress(instruction.Operands, cpu, memory)
-
-	case 0x0E: // absolute	ASL oper
-		addr, err = addressing.GetAbsoluteAddress(instruction.Operands, cpu, memory)
-
-	case 0x1E: // absolute,X	ASL oper,X
-		addr, err = addressing.GetAbsoluteXAddress(instruction.Operands, cpu, memory)
+	addr, err := instruction.GetOperandReferencedAddress(cpu, memory)
+	if err != nil {
+		return err
 	}
 
 	readByte, err := memory.ReadByte(addr)
@@ -51,6 +34,8 @@ func (handler *ASLHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruct
 	result, carry := shiftLeftOneBit(readByte)
 	memory.Write(addr, []byte{result})
 
-	cpu.SetStatusFlags(int8(result) < 0, false, false, false, false, result == 0, carry)
+	cpu.SetNegativeFlag(int8(result) < 0)
+	cpu.SetZeroFlag(result == 0)
+	cpu.SetCarryFlag(carry)
 	return nil
 }
