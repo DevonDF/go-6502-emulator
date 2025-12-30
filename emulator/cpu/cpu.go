@@ -70,69 +70,72 @@ func (cpu *CPU) GetNegativeFlag() uint8 {
 
 // SetCarryFlag sets the carry bit flag.
 func (cpu *CPU) SetCarryFlag(bit bool) {
-	cpu.RegisterSR = cpu.RegisterSR | 0x01
+	if bit {
+		cpu.RegisterSR = cpu.RegisterSR | 0x01
+	} else {
+		cpu.RegisterSR = cpu.RegisterSR & (0xFF - 0x01)
+	}
+
 }
 
 // SetZeroFlag sets the zero bit flag.
 func (cpu *CPU) SetZeroFlag(bit bool) {
-	cpu.RegisterSR = cpu.RegisterSR | 0x02
+	if bit {
+		cpu.RegisterSR = cpu.RegisterSR | 0x02
+	} else {
+		cpu.RegisterSR = cpu.RegisterSR & (0xFF - 0x02)
+	}
 }
 
 // SetInterruptFlag sets the interrupt bit flag.
 func (cpu *CPU) SetInterruptFlag(bit bool) {
-	cpu.RegisterSR = cpu.RegisterSR | 0x04
+	if bit {
+		cpu.RegisterSR = cpu.RegisterSR | 0x04
+	} else {
+		cpu.RegisterSR = cpu.RegisterSR & (0xFF - 0x04)
+	}
 }
 
 // SetDecimalFlag sets the decimal bit flag.
 func (cpu *CPU) SetDecimalFlag(bit bool) {
-	cpu.RegisterSR = cpu.RegisterSR | 0x08
+	if bit {
+		cpu.RegisterSR = cpu.RegisterSR | 0x08
+	} else {
+		cpu.RegisterSR = cpu.RegisterSR & (0xFF - 0x08)
+	}
 }
 
 // SetBreakFlag sets the break bit flag.
 func (cpu *CPU) SetBreakFlag(bit bool) {
-	cpu.RegisterSR = cpu.RegisterSR | 0x10
+	if bit {
+		cpu.RegisterSR = cpu.RegisterSR | 0x10
+	} else {
+		cpu.RegisterSR = cpu.RegisterSR & (0xFF - 0x10)
+	}
 }
 
 // SetOverflowFlag sets the overflow bit flag.
 func (cpu *CPU) SetOverflowFlag(bit bool) {
-	cpu.RegisterSR = cpu.RegisterSR | 0x40
+	if bit {
+		cpu.RegisterSR = cpu.RegisterSR | 0x40
+	} else {
+		cpu.RegisterSR = cpu.RegisterSR & (0xFF - 0x40)
+	}
 }
 
 // SetNegativeFlag sets the negative bit flag.
 func (cpu *CPU) SetNegativeFlag(bit bool) {
-	cpu.RegisterSR = cpu.RegisterSR | 0x80
-}
-
-// SetStatusFlags sets the flags for the SR Status Register within the CPU.
-func (cpu *CPU) SetStatusFlags(negative bool, overflow bool, break_ bool, decimal bool, interrupt bool, zero bool, carry bool) {
-	newSR := uint8(0)
-
-	if negative {
-		newSR = newSR | 0x80
+	if bit {
+		cpu.RegisterSR = cpu.RegisterSR | 0x80
+	} else {
+		cpu.RegisterSR = cpu.RegisterSR & (0xFF - 0x80)
 	}
-	if overflow {
-		newSR = newSR | 0x40
-	}
-	if break_ {
-		newSR = newSR | 0x10
-	}
-	if decimal {
-		newSR = newSR | 0x08
-	}
-	if interrupt {
-		newSR = newSR | 0x04
-	}
-	if zero {
-		newSR = newSR | 0x02
-	}
-	if carry {
-		newSR = newSR | 0x01
-	}
-
-	cpu.RegisterSR = newSR
 }
 
 // LogRegisters logs the state of the registers to the debug logger.
 func (cpu *CPU) LogRegisters() {
-	cpu.logger.Debug("CPU registers", "pc", cpu.RegisterPC, "ac", cpu.RegisterAC, "x", cpu.RegisterX, "y", cpu.RegisterY, "sp", cpu.RegisterSP, "sr", cpu.RegisterSR)
+	cpu.logger.Debug("CPU registers", "pc", cpu.RegisterPC, "ac", cpu.RegisterAC, "x", cpu.RegisterX,
+		"y", cpu.RegisterY, "sp", cpu.RegisterSP, "sr", cpu.RegisterSR, "N", cpu.GetNegativeFlag(), "V",
+		cpu.GetOverflowFlag(), "B", cpu.GetBreakFlag(), "D", cpu.GetDecimalFlag(), "I", cpu.GetInterruptFlag(),
+		"Z", cpu.GetZeroFlag(), "C", cpu.GetCarryFlag())
 }

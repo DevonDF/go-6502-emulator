@@ -1,6 +1,7 @@
 package emulator
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"os"
@@ -45,6 +46,8 @@ func NewEmulator(config EmulatorConfiguration) *Emulator {
 				a.Value = slog.StringValue(fmt.Sprintf("0x%X", v))
 			case uint, uint8, uint16, uint32, uint64:
 				a.Value = slog.StringValue(fmt.Sprintf("0x%X", a.Value.Uint64()))
+			case []byte:
+				a.Value = slog.StringValue(fmt.Sprintf("0x%s", hex.EncodeToString(v)))
 			}
 			return a
 		},
@@ -113,7 +116,7 @@ func (emulator *Emulator) execute() {
 		}
 
 		// Execute
-		emulator.logger.Debug("executing instruction", "opcode", inst.Instruction.Opcode, "operands", inst.Operands)
+		emulator.logger.Debug("executing instruction", "opcode", inst.Instruction.Opcode, "instruction", inst.Instruction.AssemblyString, "operands", inst.Operands)
 		err = inst.Instruction.Handler.Execute(emulator.cpu, emulator.memory, &inst)
 		if err != nil {
 			emulator.logger.Error("execution of instruction caused error", "opcode", inst.Instruction.Opcode, "err", err)
