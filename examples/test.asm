@@ -1,3 +1,11 @@
 ADC #&01
-ADC &05
-STA &0005
+AND #&01
+BEQ .success
+.fail
+ADC #&02
+STA &00
+BRK
+.success
+ADC #&01
+STA &00
+BRK

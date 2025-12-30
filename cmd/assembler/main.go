@@ -17,10 +17,20 @@ func main() {
 		return
 	}
 
-	err := assembler.Assemble(*input, *output)
+	assembler := assembler.NewAssembler()
+	err := assembler.Assemble(*input)
 	if err != nil {
-		fmt.Printf("error occured during assembly: %w", err)
-	} else {
-		fmt.Printf("wrote assembled bytecode to %s", *output)
+		fmt.Printf("error occured during assembly: %v", err)
+		return
 	}
+
+	fmt.Printf(assembler.ToHexDump())
+
+	err = assembler.Write(*output)
+	if err != nil {
+		fmt.Printf("failed to write bytecode: %v", err)
+		return
+	}
+
+	fmt.Printf("wrote assembled bytecode to %s", *output)
 }

@@ -4,16 +4,17 @@ package instructions
 type AddressingMode byte
 
 const (
-	AddrAccumulator AddressingMode = iota
+	AddrNone AddressingMode = iota
+	AddrAccumulator
 	AddrAbsolute
 	AddrAbsoluteX
 	AddrAbsoluteY
 	AddrImmediate
 	AddrImplied
+	AddrRelative
 	AddrIndirect
 	AddrIndirectX
 	AddrIndirectY
-	AddrRelative
 	AddrZeropage
 	AddrZeropageX
 	AddrZeropageY
@@ -275,9 +276,12 @@ var instructionSet = [256]Instruction{
 
 	// BRK - Break & Interrupt
 	0x00: { // BRK
-		Opcode: 0x00,
-		Size:   1,
-		Cycles: 7,
+		AssemblyString: "BRK",
+		Opcode:         0x00,
+		AddressingMode: AddrNone,
+		Size:           1,
+		Cycles:         7,
+		Handler:        BRK(),
 	},
 
 	// BVC - Branch on Overflow Clear
