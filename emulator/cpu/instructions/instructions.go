@@ -729,13 +729,255 @@ var instructionSet = [256]Instruction{
 		Cycles:         6,
 		Handler:        LDA(),
 	},
-	0xA2: {
+	0xB1: {
 		AssemblyString: "LDA",
-		Opcode:         0xA2,
+		Opcode:         0xB1,
 		Size:           2,
 		AddressingMode: AddrIndirectY,
 		Cycles:         5,
 		Handler:        LDA(),
+	},
+
+	// LDX - Load Index X with Memory
+	0xA2: {
+		AssemblyString: "LDX",
+		Opcode:         0xA2,
+		Size:           2,
+		AddressingMode: AddrImmediate,
+		Cycles:         2,
+		Handler:        LDX(),
+	},
+	0xA6: {
+		AssemblyString: "LDX",
+		Opcode:         0xA6,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        LDX(),
+	},
+	0xB6: {
+		AssemblyString: "LDX",
+		Opcode:         0xB6,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         4,
+		Handler:        LDX(),
+	},
+	0xAE: {
+		AssemblyString: "LDX",
+		Opcode:         0xAE,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         4,
+		Handler:        LDX(),
+	},
+	0xBE: {
+		AssemblyString: "LDX",
+		Opcode:         0xBE,
+		Size:           3,
+		AddressingMode: AddrAbsoluteY,
+		Cycles:         4,
+		Handler:        LDX(),
+	},
+
+	// LDY - Load Index Y with Memory
+	0xA0: {
+		AssemblyString: "LDY",
+		Opcode:         0xA0,
+		Size:           2,
+		AddressingMode: AddrImmediate,
+		Cycles:         2,
+		Handler:        LDY(),
+	},
+	0xA4: {
+		AssemblyString: "LDY",
+		Opcode:         0xA4,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        LDY(),
+	},
+	0xB4: {
+		AssemblyString: "LDY",
+		Opcode:         0xB4,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         4,
+		Handler:        LDY(),
+	},
+	0xAC: {
+		AssemblyString: "LDY",
+		Opcode:         0xAC,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         4,
+		Handler:        LDY(),
+	},
+	0xBC: {
+		AssemblyString: "LDY",
+		Opcode:         0xBC,
+		Size:           3,
+		AddressingMode: AddrAbsoluteY,
+		Cycles:         4,
+		Handler:        LDY(),
+	},
+
+	// LSR - Shift One Bit Right
+	0x4A: {
+		AssemblyString: "LSR",
+		Opcode:         0x4A,
+		Size:           1,
+		AddressingMode: AddrAccumulator,
+		Cycles:         2,
+		Handler:        LSR(),
+	},
+	0x46: {
+		AssemblyString: "LSR",
+		Opcode:         0x46,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         5,
+		Handler:        LSR(),
+	},
+	0x56: {
+		AssemblyString: "LSR",
+		Opcode:         0x56,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         6,
+		Handler:        LSR(),
+	},
+	0x4E: {
+		AssemblyString: "LSR",
+		Opcode:         0x4E,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         6,
+		Handler:        LSR(),
+	},
+	0x5E: {
+		AssemblyString: "LSR",
+		Opcode:         0x5E,
+		Size:           3,
+		AddressingMode: AddrAbsoluteX,
+		Cycles:         7,
+		Handler:        LSR(),
+	},
+
+	// NOP - No Operation
+	0xEA: {
+		AssemblyString: "NOP",
+		Opcode:         0xEA,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        NOP(),
+	},
+
+	// ORA - OR Memory with Accumulator
+	0x09: {
+		AssemblyString: "ORA",
+		Opcode:         0x09,
+		Size:           2,
+		AddressingMode: AddrImmediate,
+		Cycles:         2,
+		Handler:        ORA(),
+	},
+	0x05: {
+		AssemblyString: "ORA",
+		Opcode:         0x05,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        ORA(),
+	},
+	0x15: {
+		AssemblyString: "ORA",
+		Opcode:         0x15,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         4,
+		Handler:        ORA(),
+	},
+	0x0D: {
+		AssemblyString: "ORA",
+		Opcode:         0x0D,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         4,
+		Handler:        ORA(),
+	},
+	0x1D: {
+		AssemblyString: "ORA",
+		Opcode:         0x1D,
+		Size:           3,
+		AddressingMode: AddrAbsoluteX,
+		Cycles:         4,
+		Handler:        ORA(),
+	},
+	0x19: {
+		AssemblyString: "ORA",
+		Opcode:         0x19,
+		Size:           3,
+		AddressingMode: AddrAbsoluteY,
+		Cycles:         4,
+		Handler:        ORA(),
+	},
+	0x01: {
+		AssemblyString: "ORA",
+		Opcode:         0x01,
+		Size:           2,
+		AddressingMode: AddrIndirectX,
+		Cycles:         6,
+		Handler:        ORA(),
+	},
+	0x11: {
+		AssemblyString: "ORA",
+		Opcode:         0x11,
+		Size:           2,
+		AddressingMode: AddrIndirectY,
+		Cycles:         5,
+		Handler:        ORA(),
+	},
+
+	// PHA - Push Accumulator on Stack
+	0x48: {
+		AssemblyString: "PHA",
+		Opcode:         0x48,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         3,
+		Handler:        PHA(),
+	},
+
+	// PHP - Push Processor Status on Stack
+	0x08: {
+		AssemblyString: "PHP",
+		Opcode:         0x08,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         3,
+		Handler:        PHP(),
+	},
+
+	// PLA - Pull Accumulator from Stack
+	0x68: {
+		AssemblyString: "PLA",
+		Opcode:         0x68,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         4,
+		Handler:        PLA(),
+	},
+
+	// PLP - Pull Processor Status from Stack
+	0x28: {
+		AssemblyString: "PLP",
+		Opcode:         0x28,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         4,
+		Handler:        PLP(),
 	},
 
 	// STA - Store Accumulator in Memory

@@ -5,30 +5,30 @@ import (
 	"github.com/DevonDF/go-6502-emulator/emulator/memory"
 )
 
-type ASLHandler struct {
+type LSRHandler struct {
 }
 
-var aslHandler = &ASLHandler{}
+var lsrHandler = &LSRHandler{}
 
-func ASL() *ASLHandler {
-	return aslHandler
+func LSR() *LSRHandler {
+	return lsrHandler
 }
 
-// shiftLeftOneBit shifts the provided value left one bit and returns the new value and whether a carry occured.
-func shiftLeftOneBit(val uint8) (uint8, bool) {
+// shiftRightOneBit shifts the provided value right one bit and returns the new value and whether a carry occured.
+func shiftRightOneBit(val uint8) (uint8, bool) {
 	lVal := uint16(val)
-	result := lVal << 1
+	result := lVal >> 1
 	return uint8(result), (result & 0x100) != 0x00
 }
 
-func (handler *ASLHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruction *DecodedInstruction) error {
-	// C <- [] <- 0
+func (handler *LSRHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruction *DecodedInstruction) error {
+	// 0 -> [] -> C
 	var result uint8
 	var carry bool
 
 	if instruction.Instruction.AddressingMode == AddrAccumulator {
 		byteToShift := cpu.RegisterAC
-		result, carry = shiftLeftOneBit(uint8(byteToShift))
+		result, carry = shiftRightOneBit(uint8(byteToShift))
 		cpu.RegisterAC = int8(result)
 	} else {
 		addr, err := instruction.GetOperandReferencedAddress(cpu, memory)
@@ -40,11 +40,11 @@ func (handler *ASLHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruct
 		if err != nil {
 			return err
 		}
-		result, carry = shiftLeftOneBit(byteToShift)
+		result, carry = shiftRightOneBit(byteToShift)
 		memory.Write(addr, []byte{result})
 	}
 
-	cpu.SetNegativeFlag(int8(result) < 0)
+	cpu.SetNegativeFlag(false)
 	cpu.SetZeroFlag(result == 0)
 	cpu.SetCarryFlag(carry)
 	return nil
