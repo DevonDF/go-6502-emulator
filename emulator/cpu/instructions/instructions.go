@@ -418,6 +418,250 @@ var instructionSet = [256]Instruction{
 		Handler:        CMP(),
 	},
 
+	// CPX - Compare Memory with Register X
+	0xE0: {
+		AssemblyString: "CPX",
+		Opcode:         0xE0,
+		Size:           2,
+		AddressingMode: AddrImmediate,
+		Cycles:         2,
+		Handler:        CPX(),
+	},
+	0xE4: {
+		AssemblyString: "CPX",
+		Opcode:         0xE4,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        CPX(),
+	},
+	0xEC: {
+		AssemblyString: "CPX",
+		Opcode:         0xEC,
+		Size:           2,
+		AddressingMode: AddrAbsolute,
+		Cycles:         4,
+		Handler:        CPX(),
+	},
+
+	// CPY - Compare Memory with Register X
+	0xC0: {
+		AssemblyString: "CPY",
+		Opcode:         0xC0,
+		Size:           2,
+		AddressingMode: AddrImmediate,
+		Cycles:         2,
+		Handler:        CPY(),
+	},
+	0xC4: {
+		AssemblyString: "CPY",
+		Opcode:         0xC4,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        CPY(),
+	},
+	0xCC: {
+		AssemblyString: "CPY",
+		Opcode:         0xCC,
+		Size:           2,
+		AddressingMode: AddrAbsolute,
+		Cycles:         4,
+		Handler:        CPY(),
+	},
+
+	// DEC - Decrement Memory by One
+	0xC6: {
+		AssemblyString: "DEC",
+		Opcode:         0xC6,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         5,
+		Handler:        DEC(),
+	},
+	0xD6: {
+		AssemblyString: "DEC",
+		Opcode:         0xD6,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         6,
+		Handler:        DEC(),
+	},
+	0xCE: {
+		AssemblyString: "DEC",
+		Opcode:         0xCE,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         6,
+		Handler:        DEC(),
+	},
+	0xDE: {
+		AssemblyString: "DEC",
+		Opcode:         0xDE,
+		Size:           2,
+		AddressingMode: AddrAbsoluteX,
+		Cycles:         7,
+		Handler:        DEC(),
+	},
+
+	// DEX - Decrement Register X by One
+	0xCA: {
+		AssemblyString: "DEX",
+		Opcode:         0xCA,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        DEX(),
+	},
+
+	// DEY - Decrement Register Y by One
+	0x88: {
+		AssemblyString: "DEY",
+		Opcode:         0x88,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        DEY(),
+	},
+
+	// EOR - Exclusive-OR Memory with Accumulator
+	0x49: {
+		AssemblyString: "EOR",
+		Opcode:         0x49,
+		Size:           2,
+		AddressingMode: AddrImmediate,
+		Cycles:         2,
+		Handler:        EOR(),
+	},
+	0x45: {
+		AssemblyString: "EOR",
+		Opcode:         0x45,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        EOR(),
+	},
+	0x55: {
+		AssemblyString: "EOR",
+		Opcode:         0x55,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         4,
+		Handler:        EOR(),
+	},
+	0x4D: {
+		AssemblyString: "EOR",
+		Opcode:         0x4D,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         4,
+		Handler:        EOR(),
+	},
+	0x5D: {
+		AssemblyString: "EOR",
+		Opcode:         0x5D,
+		Size:           3,
+		AddressingMode: AddrAbsoluteX,
+		Cycles:         4,
+		Handler:        EOR(),
+	},
+	0x59: {
+		AssemblyString: "EOR",
+		Opcode:         0x59,
+		Size:           3,
+		AddressingMode: AddrAbsoluteY,
+		Cycles:         4,
+		Handler:        EOR(),
+	},
+	0x41: {
+		AssemblyString: "EOR",
+		Opcode:         0x41,
+		Size:           2,
+		AddressingMode: AddrIndirectX,
+		Cycles:         6,
+		Handler:        EOR(),
+	},
+	0x51: {
+		AssemblyString: "EOR",
+		Opcode:         0x51,
+		Size:           2,
+		AddressingMode: AddrIndirectY,
+		Cycles:         5,
+		Handler:        EOR(),
+	},
+
+	// INC - Increment Memory by One
+	0xE6: {
+		AssemblyString: "INC",
+		Opcode:         0xE6,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         5,
+		Handler:        INC(),
+	},
+	0xF6: {
+		AssemblyString: "INC",
+		Opcode:         0xF6,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         6,
+		Handler:        INC(),
+	},
+	0xEE: {
+		AssemblyString: "INC",
+		Opcode:         0xEE,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         6,
+		Handler:        INC(),
+	},
+	0xFE: {
+		AssemblyString: "INC",
+		Opcode:         0xFE,
+		Size:           3,
+		AddressingMode: AddrAbsoluteX,
+		Cycles:         7,
+		Handler:        INC(),
+	},
+
+	// INX - Increment Index X by One
+	0xE8: {
+		AssemblyString: "INX",
+		Opcode:         0xE8,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        INX(),
+	},
+
+	// INY - Increment Index Y by One
+	0xC8: {
+		AssemblyString: "INY",
+		Opcode:         0xC8,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        INY(),
+	},
+
+	// JMP - Jump to New Location
+	0x4C: {
+		AssemblyString: "JMP",
+		Opcode:         0x4C,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         3,
+		Handler:        JMP(),
+	},
+	0x6C: {
+		AssemblyString: "JMP",
+		Opcode:         0x6C,
+		Size:           3,
+		AddressingMode: AddrIndirect,
+		Cycles:         5,
+		Handler:        JMP(),
+	},
+
 	// LDA - Load Accumulator with Memory
 	0xA9: {
 		AssemblyString: "LDA",

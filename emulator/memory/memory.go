@@ -51,7 +51,7 @@ func (memory *Memory) ReadByte(address uint16) (byte, error) {
 	return memory.memory[int(address)], nil
 }
 
-// Read reads into the buffer the memory at the provided address until buffer is full.
+// Read16 reads a uint16 at the given address and returns it.
 func (memory *Memory) Read16(address uint16) (uint16, error) {
 	if int(address)+2 > len(memory.memory) {
 		return 0x0, errors.New("out of bound read")
