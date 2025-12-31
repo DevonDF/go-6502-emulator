@@ -28,21 +28,21 @@ func GetAbsoluteXAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (
 // GetAbsoluteYAddress returns the address in memory given by the provided operands using absolute,Y addressing.
 func GetAbsoluteYAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (uint16, error) {
 	addr := uint16(operands[0])
-	addr2, err := memory.Read16(addr)
+	addr2, err := memory.ReadDouble(addr)
 	return addr2 + uint16(cpu.RegisterY), err
 }
 
 // GetIndirectXAddress returns the address in memory given by the provided operands using indirect,X addressing.
 func GetIndirectXAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (uint16, error) {
 	addr := uint16(operands[0]) + uint16(cpu.RegisterX)
-	addr2, err := memory.Read16(addr)
+	addr2, err := memory.ReadDouble(addr)
 	return addr2, err
 }
 
 // GetIndirectYAddress returns the address in memory given by the provided operands using indirect,Y addressing.
 func GetIndirectYAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (uint16, error) {
 	addr := uint16(operands[0]) + uint16(cpu.RegisterX)
-	addr2, err := memory.Read16(addr)
+	addr2, err := memory.ReadDouble(addr)
 	return addr2, err
 }
 

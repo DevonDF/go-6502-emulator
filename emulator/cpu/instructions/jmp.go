@@ -29,7 +29,7 @@ func (handler *JMPHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruct
 		if err != nil {
 			return err
 		}
-		nextPC, err = memory.Read16(addr)
+		nextPC, err = memory.ReadDouble(addr)
 	}
 
 	if err != nil {

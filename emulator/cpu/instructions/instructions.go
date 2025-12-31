@@ -662,6 +662,16 @@ var instructionSet = [256]Instruction{
 		Handler:        JMP(),
 	},
 
+	// JSR - Jump to New Location Saving Return Address
+	0x20: {
+		AssemblyString: "JSR",
+		Opcode:         0x20,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         6,
+		Handler:        JSR(),
+	},
+
 	// LDA - Load Accumulator with Memory
 	0xA9: {
 		AssemblyString: "LDA",

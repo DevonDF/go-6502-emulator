@@ -7,6 +7,7 @@ import (
 // CPU holds the CPU registers and an ACU for mathematical & bitwise operations.
 type CPU struct {
 	Accumulator *Accumulator
+	Stack       *Stack
 	RegisterPC  uint16
 	RegisterAC  int8
 	RegisterX   int8
@@ -29,6 +30,8 @@ func NewCPU(logger *slog.Logger) *CPU {
 
 		logger: logger,
 	}
+
+	cpu.Stack = NewStack(cpu, logger)
 	cpu.Accumulator = NewAccumulator(cpu, logger)
 	return cpu
 }
