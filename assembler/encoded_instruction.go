@@ -11,8 +11,9 @@ import (
 type EncodedInstruction struct {
 	assembly        string                    // the raw assembly for this instruction.
 	operands        string                    // the operands string.
+	operandIsLabel  bool                      // the operand is a label
 	instruction     *instructions.Instruction // the instruction of this instruction.
-	relativeAddress int                       // the relative address of this instruction.
+	relativeAddress uint16                    // the relative address of this instruction.
 }
 
 // hexStringToBytes parses a hex string and returns a little-endian encoded byte array.
@@ -50,7 +51,7 @@ func (encodedInstruction *EncodedInstruction) ToBytecode(assembler *Assembler) (
 		if !found {
 			return nil, fmt.Errorf("unable to find label %s: %s", encodedInstruction.operands, encodedInstruction.assembly)
 		}
-		operandBytes = []byte{byte((labelAddr - encodedInstruction.relativeAddress) - int(encodedInstruction.instruction.Size))}
+		operandBytes = []byte{byte((labelAddr - encodedInstruction.relativeAddress) - uint16(encodedInstruction.instruction.Size))}
 
 	case instructions.AddrImmediate:
 		operandBytes, err = hexStringToBytes(encodedInstruction.operands[2:])
@@ -63,7 +64,15 @@ func (encodedInstruction *EncodedInstruction) ToBytecode(assembler *Assembler) (
 		operandBytes, err = hexStringToBytes(beforeComma[1:])
 
 	case instructions.AddrAbsolute:
-		operandBytes, err = hexStringToBytes(encodedInstruction.operands[1:])
+		if encodedInstruction.operandIsLabel {
+			labelAddr, found := assembler.getAddressForLabel(encodedInstruction.operands)
+			if !found {
+				return nil, fmt.Errorf("unable to find label %s: %s", encodedInstruction.operands, encodedInstruction.assembly)
+			}
+			operandBytes = []byte{byte(labelAddr & 0xFF), byte((labelAddr >> 8) & 0xFF)}
+		} else {
+			operandBytes, err = hexStringToBytes(encodedInstruction.operands[1:])
+		}
 
 	case instructions.AddrAbsoluteX, instructions.AddrAbsoluteY:
 		beforeComma, _, _ := strings.Cut(encodedInstruction.operands, ",")

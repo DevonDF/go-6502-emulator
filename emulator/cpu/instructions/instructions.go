@@ -980,6 +980,110 @@ var instructionSet = [256]Instruction{
 		Handler:        PLP(),
 	},
 
+	// ROL - Rotate One Bit Left
+	0x2A: {
+		AssemblyString: "ROL",
+		Opcode:         0x2A,
+		Size:           1,
+		AddressingMode: AddrAccumulator,
+		Cycles:         2,
+		Handler:        ROL(),
+	},
+	0x26: {
+		AssemblyString: "ROL",
+		Opcode:         0x26,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         5,
+		Handler:        ROL(),
+	},
+	0x36: {
+		AssemblyString: "ROL",
+		Opcode:         0x36,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         6,
+		Handler:        ROL(),
+	},
+	0x2E: {
+		AssemblyString: "ROL",
+		Opcode:         0x2E,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         6,
+		Handler:        ROL(),
+	},
+	0x3E: {
+		AssemblyString: "ROL",
+		Opcode:         0x3E,
+		Size:           3,
+		AddressingMode: AddrAbsoluteX,
+		Cycles:         7,
+		Handler:        ROL(),
+	},
+
+	// ROR - Rotate One Bit Right
+	0x6A: {
+		AssemblyString: "ROR",
+		Opcode:         0x6A,
+		Size:           1,
+		AddressingMode: AddrAccumulator,
+		Cycles:         2,
+		Handler:        ROR(),
+	},
+	0x66: {
+		AssemblyString: "ROR",
+		Opcode:         0x66,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         5,
+		Handler:        ROR(),
+	},
+	0x76: {
+		AssemblyString: "ROR",
+		Opcode:         0x76,
+		Size:           2,
+		AddressingMode: AddrZeropageX,
+		Cycles:         6,
+		Handler:        ROR(),
+	},
+	0x6E: {
+		AssemblyString: "ROR",
+		Opcode:         0x6E,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         6,
+		Handler:        ROR(),
+	},
+	0x7E: {
+		AssemblyString: "ROR",
+		Opcode:         0x7E,
+		Size:           3,
+		AddressingMode: AddrAbsoluteX,
+		Cycles:         7,
+		Handler:        ROR(),
+	},
+
+	// RTI - Return from Interrupt
+	0x40: {
+		AssemblyString: "RTI",
+		Opcode:         0x40,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         6,
+		Handler:        RTI(),
+	},
+
+	// RTS - Return from Subroutine
+	0x60: {
+		AssemblyString: "RTS",
+		Opcode:         0x60,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         6,
+		Handler:        RTS(),
+	},
+
 	// STA - Store Accumulator in Memory
 	0x85: {
 		AssemblyString: "STA",
