@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 )
 
 type EmulatorConfiguration struct {
-	Debug bool
+	Logfile os.File
 }
 
 type Emulator struct {
@@ -29,13 +30,8 @@ type Emulator struct {
 
 // NewEmulator creates a new Emulator with the provided configuration
 func NewEmulator(config EmulatorConfiguration) *Emulator {
-	loggerLevel := slog.LevelError
-	if config.Debug {
-		loggerLevel = slog.LevelDebug
-	}
-
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: loggerLevel,
+	logger := slog.New(slog.NewTextHandler(&config.Logfile, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			switch v := a.Value.Any().(type) {
 			case int:
@@ -112,6 +108,7 @@ func (emulator *Emulator) StartEmulator() {
 			// an input was detected by the user
 			switch key {
 			case 'q':
+				emulator.StopEmulator()
 				return
 			case 's':
 				err := emulator.step()
@@ -141,9 +138,10 @@ func (emulator *Emulator) StartEmulator() {
 func (emulator *Emulator) StopEmulator() {
 	emulator.running = false
 
-	if emulator.config.Debug {
-		emulator.logger.Debug("dumping memory to memory.dump")
-		os.WriteFile("memory.dump", []byte(emulator.memory.Dump()), 0644)
+	emulator.logger.Debug("dumping memory")
+	memoryDump := emulator.memory.Dump()
+	for _, line := range strings.Split(strings.TrimRight(memoryDump, "\n"), "\n") {
+		emulator.logger.Debug(line)
 	}
 }
 
@@ -236,6 +234,7 @@ func (emulator *Emulator) step() error {
 
 	// Increment PC
 	emulator.cpu.RegisterPC += uint16(inst.Instruction.Size)
+	emulator.cpu.LogRegisters()
 
 	return nil
 }
