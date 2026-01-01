@@ -121,6 +121,8 @@ func (emulator *Emulator) StartEmulator() {
 				emulator.printInteractiveTerminal()
 			case 'r':
 				running = true
+			case 'p':
+				running = false
 			}
 		default:
 			if running {
@@ -129,7 +131,7 @@ func (emulator *Emulator) StartEmulator() {
 					return
 				}
 				emulator.printInteractiveTerminal()
-				time.Sleep(time.Millisecond * 100)
+				time.Sleep(time.Millisecond * 1000)
 			}
 		}
 	}
@@ -167,8 +169,8 @@ func (emulator *Emulator) generateDescriptiveString() string {
 	str := "Registers\n"
 	str += fmt.Sprintf("\tPC = 0x%04X <- %s\n", emulator.cpu.RegisterPC, currentInstruction.GetFullAssemblyString())
 	str += fmt.Sprintf("\tAC = 0x%02X\n", emulator.cpu.RegisterAC)
-	str += fmt.Sprintf("\tX = 0x%02X\n", emulator.cpu.RegisterX)
-	str += fmt.Sprintf("\tY = 0x%02X\n", emulator.cpu.RegisterY)
+	str += fmt.Sprintf("\tX  = 0x%02X\n", emulator.cpu.RegisterX)
+	str += fmt.Sprintf("\tY  = 0x%02X\n", emulator.cpu.RegisterY)
 	str += fmt.Sprintf("\tSP = 0x%02X\n", emulator.cpu.RegisterSP)
 	str += fmt.Sprintf("\tSR = 0x%02X    C=0x%02X    Z=0x%02X    I=0x%02X    D=0x%02X    B=0x%02X    V=0x%02X    N=0x%02X\n\n",
 		emulator.cpu.RegisterSR,
