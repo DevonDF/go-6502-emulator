@@ -1151,6 +1151,56 @@ var instructionSet = [256]Instruction{
 		Cycles:         2,
 		Handler:        TAX(),
 	},
+
+	// TAY - Transfer Accumulator to Index Y
+	0xA8: {
+		AssemblyString: "TAY",
+		Opcode:         0xA8,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        TAY(),
+	},
+
+	// TSX - Transfer Stack Pointer to Index X
+	0xBA: {
+		AssemblyString: "TSX",
+		Opcode:         0xBA,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        TSX(),
+	},
+
+	// TXA - Transfer Index X to Accumulator
+	0x8A: {
+		AssemblyString: "TXA",
+		Opcode:         0x8A,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        TXA(),
+	},
+
+	// TXS - Transfer Index X to Stack Register
+	0x9A: {
+		AssemblyString: "TXS",
+		Opcode:         0x9A,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        TXS(),
+	},
+
+	// TYA - Transfer Index Y to Accumulator
+	0x98: {
+		AssemblyString: "TYA",
+		Opcode:         0x98,
+		Size:           1,
+		AddressingMode: AddrImplied,
+		Cycles:         2,
+		Handler:        TYA(),
+	},
 }
 
 // InstructionFromOpcode returns a pointer to an Instruction from a provided opcode.
