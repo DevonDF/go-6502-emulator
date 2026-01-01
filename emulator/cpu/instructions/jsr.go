@@ -25,6 +25,7 @@ func (handler *JSRHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruct
 		return err
 	}
 
-	cpu.RegisterPC = nextPC
+	// the fetch-decode-execute cycle will increment by the instruction size, we should counteract this
+	cpu.RegisterPC = (nextPC - uint16(instruction.Instruction.Size))
 	return nil
 }

@@ -1,7 +1,11 @@
-LDA #&09
-CMP #&09
-BEQ .success
-BRK
-.success
-LDA #&01
-STA &00
+main:
+    LDA #$09
+    JMP test
+    BRK
+    BRK
+    BRK
+    BRK
+
+test:
+    ADC #$01
+    STA $01

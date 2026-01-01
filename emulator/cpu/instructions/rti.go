@@ -28,6 +28,8 @@ func (handler *RTIHandler) Execute(cpu *cpu.CPU, memory *memory.Memory, instruct
 	if err != nil {
 		return err
 	}
-	cpu.RegisterPC = uint16(pc)
+
+	// the fetch-decode-execute cycle will increment by the instruction size, we should counteract this
+	cpu.RegisterPC = uint16(pc) - uint16(instruction.Instruction.Size)
 	return nil
 }
