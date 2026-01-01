@@ -103,11 +103,56 @@ func (instruction *DecodedInstruction) GetOperandReferencedAddress(cpu_ *cpu.CPU
 	return addr, err
 }
 
+// GetFullAssemblyString gets the full assembly string representation of this instruction.
+func (instruction *DecodedInstruction) GetFullAssemblyString() string {
+	var operand string
+
+	switch instruction.Instruction.AddressingMode {
+	case AddrAccumulator:
+		operand = "A"
+
+	case AddrImplied:
+		operand = ""
+
+	case AddrImmediate:
+		operand = fmt.Sprintf("#$%02X", instruction.Operands)
+
+	case AddrRelative:
+		operand = fmt.Sprintf("%d", instruction.Operands[0])
+
+	case AddrZeropage:
+		operand = fmt.Sprintf("$%02X", instruction.Operands)
+
+	case AddrZeropageX:
+		operand = fmt.Sprintf("$%02X,X", instruction.Operands)
+
+	case AddrAbsolute:
+		operand = fmt.Sprintf("$%04X", instruction.Operands)
+
+	case AddrAbsoluteX:
+		operand = fmt.Sprintf("$%04X,X", instruction.Operands)
+
+	case AddrAbsoluteY:
+		operand = fmt.Sprintf("$%04X,Y", instruction.Operands)
+
+	case AddrIndirectX:
+		operand = fmt.Sprintf("(%02X,X)", instruction.Operands)
+
+	case AddrIndirectY:
+		operand = fmt.Sprintf("(%02X),Y", instruction.Operands)
+
+	default:
+		operand = ""
+	}
+
+	return instruction.Instruction.AssemblyString + " " + operand
+}
+
 // DecodeNextInstruction decodes the next instruction from a buffered byte reader and returns a DecodedInstruction.
-func DecodeNextInstruction(reader *bufio.Reader) (DecodedInstruction, error) {
+func DecodeNextInstruction(reader *bufio.Reader) (*DecodedInstruction, error) {
 	opcode, err := reader.ReadByte()
 	if err != nil {
-		return DecodedInstruction{}, err
+		return nil, err
 	}
 
 	instruction := InstructionFromOpcode(opcode)
@@ -115,10 +160,10 @@ func DecodeNextInstruction(reader *bufio.Reader) (DecodedInstruction, error) {
 	operands := make([]byte, instruction.Size-1)
 	_, err = reader.Read(operands)
 	if err != nil {
-		return DecodedInstruction{}, fmt.Errorf("failed to read operands for opcode %02X: %w", opcode, err)
+		return nil, fmt.Errorf("failed to read operands for opcode %02X: %w", opcode, err)
 	}
 
-	decodedInstruction := DecodedInstruction{
+	decodedInstruction := &DecodedInstruction{
 		Instruction: instruction,
 		Operands:    operands,
 	}

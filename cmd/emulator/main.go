@@ -7,6 +7,10 @@ import (
 	"github.com/DevonDF/go-6502-emulator/emulator"
 )
 
+func printTerminal(emulator_ *emulator.Emulator) {
+
+}
+
 func main() {
 	debug := flag.Bool("debug", false, "enable debug mode")
 	rom := flag.String("rom", "", "ROM file to load and execute in emulator")
@@ -24,9 +28,8 @@ func main() {
 
 	err := newEmulator.LoadROM(*rom)
 	if err != nil {
-		fmt.Printf("failed to load ROM into memory: %w", err)
+		fmt.Printf("failed to load ROM into memory: %v", err)
 		return
 	}
-
 	newEmulator.StartEmulator()
 }
