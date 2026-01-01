@@ -63,7 +63,14 @@ func (assembler *Assembler) getAddressingMode(operands string) (instructions.Add
 			}
 		}
 	} else if operands[0] == '(' { // indirect addressing
-		return 0x0, labelUsed, fmt.Errorf("unimplemented use of addressing mode: %s", operands)
+		if operands[len(operands)-1] == ')' {
+			// indirectX addressing
+			addressingMode = instructions.AddrIndirectX
+		} else if operands[len(operands)-1] == 'Y' {
+			addressingMode = instructions.AddrIndirectY
+		} else {
+			return 0x0, labelUsed, fmt.Errorf("unimplemented use of addressing mode: %s", operands)
+		}
 	} else {
 		// assume this is a label
 		addressingMode = instructions.AddrImplied

@@ -3,27 +3,34 @@
 
 ; init a list of numbers to sum
 LDA #$02
-STA $80
+STA $0200
 LDA #$0A
-STA $81
+STA $0201
 LDA #$04
-STA $82
+STA $0202
 
 ; construct arguments to function sum
-LDX #$80 ; first argument is the start of the array
-LDY #$03 ; second argument is the size of the array
-JSR sum ; sum(0x0080, 3)
+LDA #$00
 STA $00
-BRK
+LDA #$02
+STA $01 ; first argument is uint16 address to the location of array
+LDA #$03
+STA $02 ; second argument is uint8 number of elements in array
+JSR sum ; sum()
 
-; sum sums the list (of length Y) of integers given at zeropage address X 
+STA $00 ; store result in 0x0000
+BRK ; end
+
+; sum(address uint16, length uint8) int8
 sum:
     LDA #$00 ; null accumulator
+    LDX $02 ; load X with the length of the array
+    LDY $00 ; Y will be our index of the array
 sumLoop:
-    ADC $00,X
-    INX
-    DEY
-    CPY #$00
+    ADC ($00),Y ; add the current array value to the accumulator
+    INY ; increment our index Y
+    DEX ; decrease our counter X
+    CPX #$00 ; when we have read all of the array, we need to return
     BNE sumLoop
     RTS
 

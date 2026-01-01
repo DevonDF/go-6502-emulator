@@ -78,6 +78,9 @@ func (encodedInstruction *EncodedInstruction) ToBytecode(assembler *Assembler) (
 		beforeComma, _, _ := strings.Cut(encodedInstruction.operands, ",")
 		operandBytes, err = hexStringToBytes(beforeComma[1:])
 
+	case instructions.AddrIndirectX, instructions.AddrIndirectY:
+		operandBytes, err = hexStringToBytes(encodedInstruction.operands[2:4])
+
 	default:
 		return nil, fmt.Errorf("unimplemented addressing mode for instruction: %s", encodedInstruction.assembly)
 	}
