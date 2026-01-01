@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -64,6 +63,8 @@ func NewEmulator(config EmulatorConfiguration) *Emulator {
 
 // StartEmulator runs any startup required when beginning the emulator and starts the interactive emulator.
 func (emulator *Emulator) StartEmulator() {
+	defer emulator.StopEmulator()
+
 	emulator.cpu.RegisterPC = memory.ROMStartAddress // Set the PC to the start of ROM
 	emulator.cpu.RegisterSP = 0x00                   // Set stack pointer to 0x00
 	emulator.cpu.RegisterX = 0x00                    // Set register X to 0x00
@@ -108,7 +109,6 @@ func (emulator *Emulator) StartEmulator() {
 			// an input was detected by the user
 			switch key {
 			case 'q':
-				emulator.StopEmulator()
 				return
 			case 's':
 				err := emulator.step()
@@ -140,9 +140,7 @@ func (emulator *Emulator) StopEmulator() {
 
 	emulator.logger.Debug("dumping memory")
 	memoryDump := emulator.memory.Dump()
-	for _, line := range strings.Split(strings.TrimRight(memoryDump, "\n"), "\n") {
-		emulator.logger.Debug(line)
-	}
+	emulator.config.Logfile.WriteString(memoryDump)
 }
 
 // LoadROM loads a ROM into memory at 0x8000.
