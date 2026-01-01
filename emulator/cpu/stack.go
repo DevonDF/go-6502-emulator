@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"encoding/hex"
 	"log/slog"
 
 	"github.com/DevonDF/go-6502-emulator/emulator/memory"
@@ -70,4 +71,11 @@ func (stack *Stack) PopDouble(memory_ *memory.Memory) (int16, error) {
 
 	stack.logger.Debug("stack PopDouble", "value", readDouble, "SP", stack.cpu.RegisterSP+2, "NewSP", stack.cpu.RegisterSP)
 	return int16(readDouble), nil
+}
+
+// ToHexDump returns a hexdump of the used stack.
+func (stack *Stack) ToHexDump(memory_ *memory.Memory) string {
+	stackBytes := make([]byte, max(stack.cpu.RegisterSP, 16))
+	memory_.Read(memory.StackStartAddress, &stackBytes)
+	return hex.Dump(stackBytes)
 }
