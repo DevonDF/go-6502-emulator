@@ -37,7 +37,7 @@ func (stack *Stack) PushByte(value int8, memory_ *memory.Memory) error {
 
 // PushDouble pushes a double onto the stack.
 func (stack *Stack) PushDouble(value int16, memory_ *memory.Memory) error {
-	stack.logger.Debug("stack PushByte", "value", value, "SP", stack.cpu.RegisterSP, "NewSP", stack.cpu.RegisterSP+2)
+	stack.logger.Debug("stack PushDouble", "value", value, "SP", stack.cpu.RegisterSP, "NewSP", stack.cpu.RegisterSP+2)
 
 	err := memory_.Write(stack.getStackPointerAddress(), []byte{byte(value & 0xFF), byte((value >> 8) & 0xFF)})
 	if err != nil {
@@ -56,7 +56,7 @@ func (stack *Stack) PopByte(memory_ *memory.Memory) (int8, error) {
 		return 0x0, err
 	}
 
-	stack.logger.Debug("stack PushByte", "value", readByte, "SP", stack.cpu.RegisterSP+1, "NewSP", stack.cpu.RegisterSP)
+	stack.logger.Debug("stack PopByte", "value", readByte, "SP", stack.cpu.RegisterSP+1, "NewSP", stack.cpu.RegisterSP)
 	return int8(readByte), nil
 }
 
@@ -68,6 +68,6 @@ func (stack *Stack) PopDouble(memory_ *memory.Memory) (int16, error) {
 		return 0x0, err
 	}
 
-	stack.logger.Debug("stack PushByte", "value", readDouble, "SP", stack.cpu.RegisterSP+2, "NewSP", stack.cpu.RegisterSP)
+	stack.logger.Debug("stack PopDouble", "value", readDouble, "SP", stack.cpu.RegisterSP+2, "NewSP", stack.cpu.RegisterSP)
 	return int16(readDouble), nil
 }
