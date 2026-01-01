@@ -15,6 +15,7 @@ type Assembler struct {
 	bytecode     []byte               // the raw bytecode generated for this program.
 	instructions []EncodedInstruction // a list of encoded instructions for the assembly program.
 	labels       map[string]uint16    // a map of label names to relative address within the program.
+	variables    map[string]string    // a map of variable names to the raw operand.
 }
 
 // NewAssembler creates and returns a new Assembler for use.
@@ -24,6 +25,7 @@ func NewAssembler(loadAddress uint16) *Assembler {
 		bytecode:     make([]byte, 0),
 		instructions: make([]EncodedInstruction, 0),
 		labels:       map[string]uint16{},
+		variables:    map[string]string{},
 	}
 }
 
@@ -98,6 +100,13 @@ func (assembler *Assembler) getInstructionFromAssemblyLine(line string) (*Encode
 		return nil, fmt.Errorf("invalid assembly line encountered: %s", line)
 	}
 
+	// check if the operand is a variable
+	// as variables need to be defined before labels, we can be certain at this stage
+	variableOperand, found := assembler.variables[operands]
+	if found {
+		operands = variableOperand
+	}
+
 	addressingMode, labelUsed, err := assembler.getAddressingMode(operands)
 	if err != nil {
 		return nil, err
@@ -147,19 +156,47 @@ func (assembler *Assembler) Assemble(inputFilePath string) error {
 	relativeAddr := assembler.loadAddress
 	for scanner.Scan() {
 		line := scanner.Text()
+
+		// sanitise comments
 		beforeComment, _, commentExists := strings.Cut(line, ";")
 		if commentExists {
 			line = beforeComment
 		}
 		line = strings.TrimSpace(line)
 
+		// skip if empty line
 		if line == "" {
 			continue
 		}
 
+		// check for defining assembler variables here
+		if strings.HasPrefix(line, "define") {
+			definitionSplit := strings.Split(line, " ")
+			if len(definitionSplit) != 3 {
+				return fmt.Errorf("incorrect usage of 'define': %s", line)
+			}
+			variableName := definitionSplit[1]
+			operandValue := definitionSplit[2]
+
+			_, found := assembler.labels[variableName]
+			if found {
+				return fmt.Errorf("conflicting variable name %s with label", variableName)
+			}
+
+			assembler.variables[variableName] = operandValue
+			continue
+		}
+
+		// check for a label
 		if strings.HasSuffix(line, ":") {
-			// this is a label
-			assembler.labels[line[:len(line)-1]] = relativeAddr
+			labelName := line[:len(line)-1]
+
+			_, found := assembler.variables[labelName]
+			if found {
+				return fmt.Errorf("conflicting label name %s with variable", labelName)
+			}
+
+			assembler.labels[labelName] = relativeAddr
 			continue
 		}
 
