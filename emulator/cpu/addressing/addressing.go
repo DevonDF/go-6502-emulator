@@ -12,7 +12,7 @@ func GetZeropageAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (u
 
 // GetZeropageXAddress returns the address in memory given by the provided operands using zeropage,X addressing.
 func GetZeropageXAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (uint16, error) {
-	return uint16(operands[0]) + uint16(cpu.RegisterX), nil
+	return uint16(operands[0]) + uint16(uint8(cpu.RegisterX)), nil
 }
 
 // GetAbsoluteAddress returns the address in memory given by the provided operands using absolute addressing.
@@ -22,26 +22,26 @@ func GetAbsoluteAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (u
 
 // GetAbsoluteXAddress returns the address in memory given by the provided operands using absolute,X addressing.
 func GetAbsoluteXAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (uint16, error) {
-	return (uint16(operands[1])<<8 | uint16(operands[0])) + uint16(cpu.RegisterX), nil
+	return (uint16(operands[1])<<8 | uint16(operands[0])) + uint16(uint8(cpu.RegisterX)), nil
 }
 
 // GetAbsoluteYAddress returns the address in memory given by the provided operands using absolute,Y addressing.
 func GetAbsoluteYAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (uint16, error) {
 	addr := uint16(operands[0])
 	addr2, err := memory.ReadDouble(addr)
-	return addr2 + uint16(cpu.RegisterY), err
+	return addr2 + uint16(uint8(cpu.RegisterY)), err
 }
 
 // GetIndirectXAddress returns the address in memory given by the provided operands using indirect,X addressing.
 func GetIndirectXAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (uint16, error) {
-	addr := uint16(operands[0]) + uint16(cpu.RegisterX)
+	addr := uint16(operands[0]) + uint16(uint8(cpu.RegisterX))
 	addr2, err := memory.ReadDouble(addr)
 	return addr2, err
 }
 
 // GetIndirectYAddress returns the address in memory given by the provided operands using indirect,Y addressing.
 func GetIndirectYAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (uint16, error) {
-	addr := uint16(operands[0]) + uint16(cpu.RegisterX)
+	addr := uint16(operands[0]) + uint16(uint8(cpu.RegisterX))
 	addr2, err := memory.ReadDouble(addr)
 	return addr2, err
 }
