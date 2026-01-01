@@ -140,6 +140,10 @@ func (assembler *Assembler) Assemble(inputFilePath string) error {
 	relativeAddr := assembler.loadAddress
 	for scanner.Scan() {
 		line := scanner.Text()
+		beforeComment, _, commentExists := strings.Cut(line, ";")
+		if commentExists {
+			line = beforeComment
+		}
 		line = strings.TrimSpace(line)
 
 		if line == "" {
