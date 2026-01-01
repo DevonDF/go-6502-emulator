@@ -24,13 +24,11 @@ BRK ; end
 ; sum(address uint16, length uint8) int8
 sum:
     LDA #$00 ; null accumulator
-    LDX $02 ; load X with the length of the array
     LDY $00 ; Y will be our index of the array
 sumLoop:
     ADC ($00),Y ; add the current array value to the accumulator
     INY ; increment our index Y
-    DEX ; decrease our counter X
-    CPX #$00 ; when we have read all of the array, we need to return
+    CPY $02 ; when we have read all of the array, we need to return
     BNE sumLoop
     RTS
 
