@@ -11,17 +11,20 @@ import (
 
 	"github.com/DevonDF/go-6502-emulator/emulator/cpu"
 	"github.com/DevonDF/go-6502-emulator/emulator/cpu/instructions"
+	"github.com/DevonDF/go-6502-emulator/emulator/gpu"
 	"github.com/DevonDF/go-6502-emulator/emulator/memory"
 	"golang.org/x/term"
 )
 
 type EmulatorConfiguration struct {
+	Debug   bool
 	Logfile os.File
 }
 
 type Emulator struct {
 	cpu     *cpu.CPU
 	memory  *memory.Memory
+	gpu     *gpu.GPU
 	config  EmulatorConfiguration
 	running bool
 	logger  *slog.Logger
@@ -52,9 +55,12 @@ func NewEmulator(config EmulatorConfiguration) *Emulator {
 		},
 	}))
 
+	memory := memory.NewMemory(logger)
+
 	return &Emulator{
 		cpu:     cpu.NewCPU(logger),
-		memory:  memory.NewMemory(logger),
+		memory:  memory,
+		gpu:     gpu.NewGPU(memory, logger),
 		config:  config,
 		running: false,
 		logger:  logger,
@@ -95,43 +101,60 @@ func (emulator *Emulator) StartEmulator() {
 		for {
 			_, err := os.Stdin.Read(buf)
 			if err == nil {
+				if buf[0] == 0x03 {
+					os.Exit(0)
+				}
 				inputChannel <- buf[0]
 			}
 		}
 	}()
 
-	// Start the main thread of the emulator.
-	running := false
-	emulator.printInteractiveTerminal()
-	for {
-		select {
-		case key := <-inputChannel:
-			// an input was detected by the user
-			switch key {
-			case 'q':
-				return
-			case 's':
-				err := emulator.step()
-				if err != nil {
+	if emulator.config.Debug {
+		// Start the main thread of the emulator.
+		running := false
+		emulator.printDebugger()
+		for {
+			select {
+			case key := <-inputChannel:
+				// an input was detected by the user
+				switch key {
+				case 'q':
 					return
+				case 's':
+					err := emulator.step()
+					if err != nil {
+						return
+					}
+					emulator.printDebugger()
+				case 'r':
+					running = true
+				case 'p':
+					running = false
 				}
-				emulator.printInteractiveTerminal()
-			case 'r':
-				running = true
-			case 'p':
-				running = false
-			}
-		default:
-			if running {
-				err := emulator.step()
-				if err != nil {
-					return
+			default:
+				if running {
+					err := emulator.step()
+					if err != nil {
+						return
+					}
+					emulator.printDebugger()
+					time.Sleep(time.Millisecond * 1000)
 				}
-				emulator.printInteractiveTerminal()
-				time.Sleep(time.Millisecond * 1000)
 			}
 		}
+	} else {
+		// Start the main thread of the emulator.
+		running := true
+		for running {
+			err := emulator.step()
+			if err != nil {
+				return
+			}
+			emulator.gpu.Display()
+			time.Sleep(time.Millisecond * 1)
+		}
 	}
+
 }
 
 // stopEmulator stops the emulator and resets the state if required.
@@ -189,7 +212,7 @@ func (emulator *Emulator) generateDescriptiveString() string {
 	return str
 }
 
-func (emulator *Emulator) printInteractiveTerminal() {
+func (emulator *Emulator) printDebugger() {
 	fmt.Print("\033[2J\033[H")
 	fmt.Print("6502 Interactive Terminal Emulator\n\n")
 	fmt.Print(emulator.generateDescriptiveString())

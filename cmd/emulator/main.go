@@ -11,6 +11,7 @@ import (
 func main() {
 	rom := flag.String("rom", "", "ROM file to load and execute in emulator")
 	logPath := flag.String("logPath", "emu.log", "path to the log file for this emulator")
+	debug := flag.Bool("debug", false, "use the debugger")
 	flag.Parse()
 
 	if *rom == "" {
@@ -27,6 +28,7 @@ func main() {
 
 	newEmulator := emulator.NewEmulator(
 		emulator.EmulatorConfiguration{
+			Debug:   *debug,
 			Logfile: *logFile,
 		})
 
