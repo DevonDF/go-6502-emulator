@@ -19,7 +19,7 @@ func main() {
 		return
 	}
 
-	logFile, err := os.OpenFile(*logPath, os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile(*logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		fmt.Printf("failed to open log file %s: %v", *logPath, err)
 		return
