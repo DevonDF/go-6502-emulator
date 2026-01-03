@@ -1142,6 +1142,58 @@ var instructionSet = [256]Instruction{
 		Handler:        STA(),
 	},
 
+	// STX - Store Index X in Memory
+	0x86: {
+		AssemblyString: "STX",
+		Opcode:         0x86,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        STX(),
+	},
+	0x96: {
+		AssemblyString: "STX",
+		Opcode:         0x96,
+		Size:           2,
+		AddressingMode: AddrZeropageY,
+		Cycles:         4,
+		Handler:        STX(),
+	},
+	0x8E: {
+		AssemblyString: "STX",
+		Opcode:         0x8E,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         4,
+		Handler:        STX(),
+	},
+
+	// STY - Store Index Y in Memory
+	0x84: {
+		AssemblyString: "STY",
+		Opcode:         0x84,
+		Size:           2,
+		AddressingMode: AddrZeropage,
+		Cycles:         3,
+		Handler:        STY(),
+	},
+	0x94: {
+		AssemblyString: "STY",
+		Opcode:         0x94,
+		Size:           2,
+		AddressingMode: AddrZeropageY,
+		Cycles:         4,
+		Handler:        STY(),
+	},
+	0x8C: {
+		AssemblyString: "STY",
+		Opcode:         0x8C,
+		Size:           3,
+		AddressingMode: AddrAbsolute,
+		Cycles:         4,
+		Handler:        STY(),
+	},
+
 	// TAX - Transfer Accumulator to Index X
 	0xAA: {
 		AssemblyString: "TAX",
