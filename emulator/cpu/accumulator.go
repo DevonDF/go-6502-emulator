@@ -28,7 +28,7 @@ func (acu *Accumulator) Add(number int8) {
 	result := int8(sum)
 
 	// if the sum is over 127 or below -128 a carry occured (too large to fit in a signed byte)
-	carryOut := sum > 0x7F
+	carryOut := sum > 0xFF
 
 	// if the 8th bit is set incorrectly (i.e. a signed overflow occured) then the overflow flag should be set
 	overflowOut := int16(acu.cpu.RegisterAC^result)&int16(number^result)&0x80 != 0x0
