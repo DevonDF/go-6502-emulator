@@ -151,7 +151,6 @@ func (emulator *Emulator) StartEmulator() {
 				return
 			}
 			emulator.gpu.Display()
-			time.Sleep(time.Millisecond * 1)
 		}
 	}
 

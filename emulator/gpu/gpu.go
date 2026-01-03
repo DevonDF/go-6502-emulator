@@ -86,7 +86,7 @@ func (gpu *GPU) Display() {
 			petsciiChar = " "
 		}
 
-		toPrint += petsciiChar
+		toPrint += " " + petsciiChar + " "
 
 		if addrOffset > 0 && (addrOffset+1)%screenWidth == 0 {
 			toPrint += "\n"
