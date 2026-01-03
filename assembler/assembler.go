@@ -12,11 +12,15 @@ import (
 )
 
 type Assembler struct {
-	loadAddress  uint16               // the address of where the program will be loaded within memory.
-	bytecode     []byte               // the raw bytecode generated for this program.
-	instructions []EncodedInstruction // a list of encoded instructions for the assembly program.
-	labels       map[string]uint16    // a map of label names to relative address within the program.
-	variables    map[string]string    // a map of variable names to the raw operand.
+	loadAddress  uint16                        // the address of where the program will be loaded within memory.
+	bytecode     []byte                        // the raw bytecode generated for this program.
+	instructions []EncodedInstructionInterface // a list of encoded instructions for the assembly program.
+	labels       map[string]uint16             // a map of label names to relative address within the program.
+	variables    map[string]string             // a map of variable names to the raw operand.
+}
+
+type EncodedInstructionInterface interface {
+	ToByteCode(assembler *Assembler) ([]byte, error)
 }
 
 // NewAssembler creates and returns a new Assembler for use.
@@ -24,7 +28,7 @@ func NewAssembler(loadAddress uint16) *Assembler {
 	return &Assembler{
 		loadAddress:  loadAddress,
 		bytecode:     make([]byte, 0),
-		instructions: make([]EncodedInstruction, 0),
+		instructions: make([]EncodedInstructionInterface, 0),
 		labels:       map[string]uint16{},
 		variables:    map[string]string{},
 	}
@@ -105,20 +109,19 @@ func (assembler *Assembler) getInstructionFromAssemblyLine(line string) (*Encode
 	// as variables need to be defined before being used, we can be certain at this stage
 	// we need to check first if some assembler-arithmatic is being used upon the variable
 	beforePlus, afterPlus, foundPlus := strings.Cut(operands, "+")
-	if foundPlus {
-		// assembler-arithmatic is being used
-		operands = beforePlus
-	}
 	beforeMinus, afterMinus, foundMinus := strings.Cut(operands, "-")
-	if foundMinus {
-		// assembler-arithmatic is being used
-		operands = beforeMinus
-	}
 
 	// find the actual variable if it exists
-	variableOperand, foundVariable := assembler.variables[operands]
-	if foundVariable {
-		operands = variableOperand
+	foundVariable := false
+	variableOperandPlus, foundBeforePlusVar := assembler.variables[beforePlus]
+	if foundBeforePlusVar {
+		operands = variableOperandPlus
+		foundVariable = true
+	}
+	variableOperandMinus, foundBeforeMinusVar := assembler.variables[beforeMinus]
+	if foundBeforeMinusVar {
+		operands = variableOperandMinus
+		foundVariable = true
 	}
 
 	// discover the addressing mode of the operand
@@ -152,21 +155,21 @@ func (assembler *Assembler) getInstructionFromAssemblyLine(line string) (*Encode
 				return nil, fmt.Errorf("failed to parse uint from operand in instruction %s: %v", assemblyString, err)
 			}
 		default:
-			return nil, fmt.Errorf("attempted assembler-arithmatic on non-supported addressing type in instruction %s", assemblyString)
+			return nil, fmt.Errorf("attempted assembler-arithmatic on non-supported addressing type in instruction %s %s", assemblyString, operands)
 		}
 
 		if foundPlus {
-			plusVal, err := strconv.ParseUint(afterPlus, 16, 8)
+			plusVal, err := strconv.ParseUint(afterPlus, 10, 8)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse uint from operand in instruction %s: %v", assemblyString, err)
 			}
 			operands = fmt.Sprintf(format, varValue+plusVal)
 		} else {
-			minusVal, err := strconv.ParseUint(afterMinus, 16, 8)
+			minusVal, err := strconv.ParseUint(afterMinus, 10, 8)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse uint from operand in instruction %s: %v", assemblyString, err)
 			}
-			operands = fmt.Sprintf(format, varValue+minusVal)
+			operands = fmt.Sprintf(format, varValue-minusVal)
 		}
 
 	}
@@ -259,20 +262,37 @@ func (assembler *Assembler) Assemble(inputFilePath string) error {
 			continue
 		}
 
-		encodedInstruction, err := assembler.getInstructionFromAssemblyLine(line)
-		if err != nil {
-			return err
+		// Create and append an EncodedInstructionInterface
+
+		var encodedInstruction EncodedInstructionInterface
+		var encodedInstructionSize uint16
+
+		if strings.HasPrefix(line, ".byte") {
+			// this is defining some raw byte memory
+			encodedInstruction = NewEncodedMemoryInstruction(line, relativeAddr)
+			bytecode, err := encodedInstruction.ToByteCode(assembler)
+			if err != nil {
+				return err
+			}
+			encodedInstructionSize = uint16(len(bytecode))
+		} else {
+			// this is an instruction
+			inst, err := assembler.getInstructionFromAssemblyLine(line)
+			if err != nil {
+				return err
+			}
+			inst.relativeAddress = relativeAddr
+			encodedInstructionSize = uint16(inst.instruction.Size)
+			encodedInstruction = inst
 		}
-		encodedInstruction.relativeAddress = relativeAddr
 
-		assembler.instructions = append(assembler.instructions, *encodedInstruction)
-
-		relativeAddr += uint16(encodedInstruction.instruction.Size)
+		assembler.instructions = append(assembler.instructions, encodedInstruction)
+		relativeAddr += encodedInstructionSize
 	}
 
 	// now on second pass we can start compiling into bytecode
 	for _, encodedInst := range assembler.instructions {
-		instBytecode, err := encodedInst.ToBytecode(assembler)
+		instBytecode, err := encodedInst.ToByteCode(assembler)
 		if err != nil {
 			return err
 		}

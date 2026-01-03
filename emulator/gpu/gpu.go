@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/DevonDF/go-6502-emulator/emulator/memory"
+	"github.com/DevonDF/go-6502-emulator/emulator/petscii"
 )
 
 const (
@@ -45,7 +46,7 @@ func (gpu *GPU) Display() {
 	}
 
 	if backgroundColourCode != 0x0 {
-		backgroundAnsiCode, found := PetsciiToAnsiBackground[backgroundColourCode]
+		backgroundAnsiCode, found := petscii.PetsciiToAnsiBackground[backgroundColourCode]
 		if !found {
 			gpu.logger.Error("undefined colour set as background colour", "colourCode", backgroundColourCode)
 			return
@@ -65,7 +66,7 @@ func (gpu *GPU) Display() {
 		}
 
 		if colourCode != 0x0 {
-			colourAnsiCode, found := PetsciiToAnsiColoursForeground[colourCode]
+			colourAnsiCode, found := petscii.PetsciiToAnsiColoursForeground[colourCode]
 			if !found {
 				gpu.logger.Error("undefined colour set as foreground colour", "colourCode", colourCode)
 				return
@@ -81,7 +82,7 @@ func (gpu *GPU) Display() {
 			return
 		}
 
-		petsciiChar, found := PetsciiToASCII[characterCode]
+		petsciiChar, found := petscii.PetsciiToASCII[characterCode]
 		if !found {
 			petsciiChar = " "
 		}
@@ -94,7 +95,7 @@ func (gpu *GPU) Display() {
 
 	}
 
-	toPrint += AnsiReset // reset ANSI state
+	toPrint += petscii.AnsiReset // reset ANSI state
 
 	fmt.Print(toPrint)
 

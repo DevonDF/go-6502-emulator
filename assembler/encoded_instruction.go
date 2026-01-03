@@ -35,7 +35,7 @@ func hexStringToBytes(hexStr string) ([]byte, error) {
 }
 
 // ToBytecode compiles and returns into bytecode the instruction.
-func (encodedInstruction *EncodedInstruction) ToBytecode(assembler *Assembler) ([]byte, error) {
+func (encodedInstruction *EncodedInstruction) ToByteCode(assembler *Assembler) ([]byte, error) {
 	var operandBytes []byte
 	var err error
 
@@ -65,10 +65,39 @@ func (encodedInstruction *EncodedInstruction) ToBytecode(assembler *Assembler) (
 
 	case instructions.AddrAbsolute:
 		if encodedInstruction.operandIsLabel {
-			labelAddr, found := assembler.getAddressForLabel(encodedInstruction.operands)
-			if !found {
-				return nil, fmt.Errorf("unable to find label %s: %s", encodedInstruction.operands, encodedInstruction.assembly)
+			// check for assembler-arithmatic
+			label := encodedInstruction.operands
+			beforePlus, afterPlus, foundPlus := strings.Cut(label, "+")
+			if foundPlus {
+				// assembler-arithmatic is being used
+				label = beforePlus
 			}
+			beforeMinus, afterMinus, foundMinus := strings.Cut(label, "-")
+			if foundMinus {
+				// assembler-arithmatic is being used
+				label = beforeMinus
+			}
+
+			labelAddr, found := assembler.getAddressForLabel(label)
+			if !found {
+				return nil, fmt.Errorf("unable to find label %s: %s", label, encodedInstruction.assembly)
+			}
+
+			if foundPlus {
+				addVal, err := strconv.ParseUint(afterPlus, 10, 8)
+				if err != nil {
+					return nil, err
+				}
+				labelAddr = labelAddr + uint16(addVal)
+			}
+			if foundMinus {
+				minusVal, err := strconv.ParseUint(afterMinus, 10, 8)
+				if err != nil {
+					return nil, err
+				}
+				labelAddr = labelAddr - uint16(minusVal)
+			}
+
 			operandBytes = []byte{byte(labelAddr & 0xFF), byte((labelAddr >> 8) & 0xFF)}
 		} else {
 			operandBytes, err = hexStringToBytes(encodedInstruction.operands[1:])
