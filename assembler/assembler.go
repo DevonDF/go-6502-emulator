@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/DevonDF/go-6502-emulator/emulator/cpu/instructions"
@@ -101,15 +102,73 @@ func (assembler *Assembler) getInstructionFromAssemblyLine(line string) (*Encode
 	}
 
 	// check if the operand is a variable
-	// as variables need to be defined before labels, we can be certain at this stage
-	variableOperand, found := assembler.variables[operands]
-	if found {
+	// as variables need to be defined before being used, we can be certain at this stage
+	// we need to check first if some assembler-arithmatic is being used upon the variable
+	beforePlus, afterPlus, foundPlus := strings.Cut(operands, "+")
+	if foundPlus {
+		// assembler-arithmatic is being used
+		operands = beforePlus
+	}
+	beforeMinus, afterMinus, foundMinus := strings.Cut(operands, "-")
+	if foundMinus {
+		// assembler-arithmatic is being used
+		operands = beforeMinus
+	}
+
+	// find the actual variable if it exists
+	variableOperand, foundVariable := assembler.variables[operands]
+	if foundVariable {
 		operands = variableOperand
 	}
 
+	// discover the addressing mode of the operand
 	addressingMode, labelUsed, err := assembler.getAddressingMode(operands)
 	if err != nil {
 		return nil, err
+	}
+
+	// now we have the addressing mode, we can perform the assembler-arithmatic
+	if foundVariable && (foundPlus || foundMinus) {
+		var varValue uint64
+		var format string
+
+		switch addressingMode {
+		case instructions.AddrImmediate:
+			varValue, err = strconv.ParseUint(operands[2:], 16, 8)
+			format = "#$%02X"
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse uint from operand in instruction %s: %v", assemblyString, err)
+			}
+		case instructions.AddrZeropage:
+			varValue, err = strconv.ParseUint(operands[1:], 16, 8)
+			format = "$%02X"
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse uint from operand in instruction %s: %v", assemblyString, err)
+			}
+		case instructions.AddrAbsolute:
+			varValue, err = strconv.ParseUint(operands[1:], 16, 16)
+			format = "$%04X"
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse uint from operand in instruction %s: %v", assemblyString, err)
+			}
+		default:
+			return nil, fmt.Errorf("attempted assembler-arithmatic on non-supported addressing type in instruction %s", assemblyString)
+		}
+
+		if foundPlus {
+			plusVal, err := strconv.ParseUint(afterPlus, 16, 8)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse uint from operand in instruction %s: %v", assemblyString, err)
+			}
+			operands = fmt.Sprintf(format, varValue+plusVal)
+		} else {
+			minusVal, err := strconv.ParseUint(afterMinus, 16, 8)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse uint from operand in instruction %s: %v", assemblyString, err)
+			}
+			operands = fmt.Sprintf(format, varValue+minusVal)
+		}
+
 	}
 
 	var instruction *instructions.Instruction
