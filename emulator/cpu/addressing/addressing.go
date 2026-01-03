@@ -41,9 +41,9 @@ func GetIndirectXAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (
 
 // GetIndirectYAddress returns the address in memory given by the provided operands using indirect,Y addressing.
 func GetIndirectYAddress(operands []byte, cpu *cpu.CPU, memory *memory.Memory) (uint16, error) {
-	addr := uint16(operands[0]) + uint16(uint8(cpu.RegisterX))
+	addr := uint16(operands[0])
 	addr2, err := memory.ReadDouble(addr)
-	return addr2, err
+	return addr2 + uint16(uint8(cpu.RegisterY)), err
 }
 
 // ReadZeropage reads a byte from memory using zeropage addressing.
