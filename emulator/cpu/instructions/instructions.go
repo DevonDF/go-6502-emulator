@@ -1269,3 +1269,14 @@ func InstructionFromAssembly(assemblyString string, addressingMode AddressingMod
 	}
 	return nil
 }
+
+// LargestInstructionSizeForOpcode returns the largest possible instruction size for a given opcode string.
+func LargestInstructionSizeForOpcode(assemblyString string) int {
+	size := 0
+	for _, inst := range instructionSet {
+		if inst.AssemblyString == assemblyString {
+			size = max(size, int(inst.Size))
+		}
+	}
+	return size
+}

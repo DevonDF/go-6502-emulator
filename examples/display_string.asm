@@ -1,0 +1,17 @@
+; simple program to display a string
+
+JMP main
+
+main:
+    LDX #$00
+loop:
+    LDA testMemory,X
+    BEQ finish
+    STA $4000,X
+    INX
+    JMP loop
+finish:
+    BRK
+
+testMemory:
+    .byte "Hello", 0x00
