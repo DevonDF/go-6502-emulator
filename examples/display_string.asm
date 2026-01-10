@@ -14,4 +14,4 @@ finish:
     BRK
 
 testMemory:
-    .byte "Hello", 0x00
+    .byte "Hello World!", 0x00

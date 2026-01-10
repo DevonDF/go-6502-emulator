@@ -6,24 +6,24 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/DevonDF/go-6502-emulator/emulator/cpu/instructions"
 )
 
 type Assembler struct {
-	loadAddress  uint16                        // the address of where the program will be loaded within memory.
-	bytecode     []byte                        // the raw bytecode generated for this program.
-	instructions []EncodedInstructionInterface // a list of instructions for the assembly program.
-	definitions  map[string]AssemblyDefinition // a map of definitions names to the AssemblyDefinition struct.
-	labels       map[string]bool               // a map of declared labels.
+	loadAddress  uint16                              // the address of where the program will be loaded within memory.
+	bytecode     []byte                              // the raw bytecode generated for this program.
+	instructions []EncodedInstructionInterface       // a list of instructions for the assembly program.
+	definitions  map[string]AssemblyDefinition       // a map of definitions names to the AssemblyDefinition struct.
+	labels       map[string]AssemblyInstructionLabel // a map of declared labels.
 }
 
 // RawAssemblyInstruction is a template struct for an assembly instruction.
 type RawAssemblyInstruction struct {
-	rawAssemblyLine string // the raw assembly line.
-	memorySize      uint16 // the size of this instruction in raw bytes.
-	relativeAddr    uint16 // the relative address.
+	rawAssemblyLine string  // the raw assembly line as a string.
+	tokens          []Token // the tokens that make up this assembly instruction.
+	memorySize      uint16  // the size of this instruction in raw bytes.
+	relativeAddr    uint16  // the relative address.
 }
 
 type EncodedInstructionInterface interface {
@@ -33,7 +33,7 @@ type EncodedInstructionInterface interface {
 // AssemblyDefinition represents a defined variable within assembly.
 type AssemblyDefinition struct {
 	name           string                      // the name of the variable
-	rawOperand     string                      // the raw string operand for replacement
+	tokens         []Token                     // the tokens for this definition
 	intOperand     uint16                      // the integer representation of the operand
 	addressingMode instructions.AddressingMode // the addressing mode of the operand
 }
@@ -45,38 +45,28 @@ func NewAssembler(loadAddress uint16) *Assembler {
 		bytecode:     make([]byte, 0),
 		instructions: make([]EncodedInstructionInterface, 0),
 		definitions:  map[string]AssemblyDefinition{},
-		labels:       map[string]bool{},
+		labels:       map[string]AssemblyInstructionLabel{},
 	}
 }
 
-// stringContainsLabel returns whether a string contains a label defined within the assembler.
-func (assembler *Assembler) stringContainsLabel(str string) bool {
-	for label, _ := range assembler.labels {
-		if strings.Contains(str, label) {
-			return true
-		}
-	}
-	return false
-}
-
-func (assembler *Assembler) getLabelWithinOperand(operand string) (*AssemblyInstructionLabel, bool) {
-	for _, assemblyLine := range assembler.instructions {
-		label, ok := assemblyLine.(*AssemblyInstructionLabel)
-		if !ok {
-			continue
-		}
-		if strings.Contains(operand, label.labelName) {
-			return label, true
+func (assembler *Assembler) getLabelWithinOperand(operandTokens []Token) (*AssemblyInstructionLabel, bool) {
+	for _, token := range operandTokens {
+		for labelName, labelInst := range assembler.labels {
+			if token.Token == labelName {
+				return &labelInst, true
+			}
 		}
 	}
 	return nil, false
 }
 
 // getDefinitionWithinOperands returns whether a string contains a definition defined within the assembler.
-func (assembler *Assembler) getDefinitionWithinOperand(operand string) (*AssemblyDefinition, bool) {
-	for varName, definition := range assembler.definitions {
-		if strings.Contains(operand, varName) {
-			return &definition, true
+func (assembler *Assembler) getDefinitionWithinOperand(operandTokens []Token) (*AssemblyDefinition, bool) {
+	for _, token := range operandTokens {
+		for varName, definition := range assembler.definitions {
+			if token.Token == varName {
+				return &definition, true
+			}
 		}
 	}
 	return nil, false
@@ -95,130 +85,84 @@ func (assembler *Assembler) readNumberStringFromString(str string) string {
 	return intStr
 }
 
-// preParseAssemblyOperand performs a pre-parse by replacing any labels & definitions and handling any math.
-func (assembler *Assembler) preParseAssemblyOperand(operand string) (string, error) {
-	newOperand := operand
-
-	// handle assembler definitions
-	definition, hasDefinition := assembler.getDefinitionWithinOperand(operand)
-	if hasDefinition {
-		value := definition.intOperand
-
-		// handle any arithmetic
-		definitionStartIndex := strings.Index(operand, definition.name)
-		definitionEndIndex := definitionStartIndex + len(definition.name)
-		if len(operand) > definitionEndIndex {
-			charAfter := operand[definitionEndIndex]
-			switch charAfter {
-			case '+':
-				numStr := assembler.readNumberStringFromString(operand[definitionEndIndex+1:])
-				toAdd, _ := strconv.Atoi(numStr)
-				value += uint16(toAdd)
-				definitionEndIndex += len(numStr) + 1
-			case '-':
-				numStr := assembler.readNumberStringFromString(operand[definitionEndIndex+1:])
-				toMinus, _ := strconv.Atoi(numStr)
-				value += uint16(toMinus)
-				definitionEndIndex += len(numStr) + 1
-			}
-		}
-
-		// create the string for this new value
-		valueStr := ""
-		switch definition.addressingMode {
-		case instructions.AddrImmediate:
-			valueStr = fmt.Sprintf("#$%02X", value)
-		case instructions.AddrZeropage:
-			valueStr = fmt.Sprintf("$%02X", value)
-		case instructions.AddrAbsolute:
-			valueStr = fmt.Sprintf("$%04X", value)
-		}
-
-		// write back the new operand
-		newOperand = newOperand[:definitionStartIndex] + valueStr + newOperand[definitionEndIndex:]
+// getAddressingModeFromOperand returns the AddressingMode used in the provided operand tokens.
+func (assembler *Assembler) getAddressingModeFromOperand(operands []Token) (instructions.AddressingMode, error) {
+	// Implied addressing
+	if len(operands) == 0 {
+		return instructions.AddrImplied, nil
 	}
 
-	// handle labels
-	label, hasLabel := assembler.getLabelWithinOperand(operand)
-	if hasLabel {
-		labelAddr := label.relativeAddr
-
-		// handle any arithmetic
-		labelStartIndex := strings.Index(operand, label.labelName)
-		labelEndIndex := labelStartIndex + len(label.labelName)
-		if len(operand) > labelEndIndex {
-			charAfter := operand[labelEndIndex]
-			switch charAfter {
-			case '+':
-				numStr := assembler.readNumberStringFromString(operand[labelEndIndex+1:])
-				toAdd, _ := strconv.Atoi(numStr)
-				labelAddr += uint16(toAdd)
-				labelEndIndex += len(numStr) + 1
-			case '-':
-				numStr := assembler.readNumberStringFromString(operand[labelEndIndex+1:])
-				toMinus, _ := strconv.Atoi(numStr)
-				labelAddr += uint16(toMinus)
-				labelEndIndex += len(numStr) + 1
-			}
-		}
-
-		// labels are always absolute addresses
-		// write back the new operand
-		newOperand = newOperand[:labelStartIndex] + fmt.Sprintf("$%04X", labelAddr) + newOperand[labelEndIndex:]
+	// Accumulator addressing
+	if operands[0].Type == TokenTypeString && operands[0].Token == "A" {
+		return instructions.AddrAccumulator, nil
 	}
 
-	return newOperand, nil
-}
+	// Immediate addressing
+	if operands[0].Type == TokenTypeSymbol && operands[0].Token == "#" {
+		return instructions.AddrImmediate, nil
+	}
 
-// getAddressingMode returns the AddressingMode used in the provided operands string and whether a label was used.
-func (assembler *Assembler) getAddressingMode(operands string) (instructions.AddressingMode, error) {
-	var addressingMode instructions.AddressingMode
+	// Absolute | Absolute,X | Absolute,Y | Zeropage | Zeropage,X | Zeropage,Y addressing
+	if operands[0].Type == TokenTypeSymbol && operands[0].Token == "$" {
+		if len(operands) < 2 {
+			return 0x0, fmt.Errorf("expected valid hex string after $")
+		}
+		hexNumToken := operands[1]
+		if hexNumToken.Type != TokenTypeNumber {
+			return 0x0, fmt.Errorf("expected valid hex string after $")
+		}
 
-	if operands == "" { // implied addressing, i.e. no operands
-		addressingMode = instructions.AddrImplied
-	} else if operands == "A" { // accumulator addressing
-		addressingMode = instructions.AddrAccumulator
-	} else if operands[0] == '#' { // immediate addressing
-		addressingMode = instructions.AddrImmediate
-	} else if operands[0] == '$' { // zeropage/absolute
-		beforeComma, afterComma, commaFound := strings.Cut(operands, ",")
-		if !commaFound {
-			if len(operands) == 3 { // zeropage addressing
-				addressingMode = instructions.AddrZeropage
-			} else { // absolute addressing
-				addressingMode = instructions.AddrAbsolute
-			}
-		} else { // X/Y zeropage or absolute addressing
-			isZeroPage := len(beforeComma) == 3
-			isAbsolute := !isZeroPage
-
-			if isZeroPage && afterComma == "X" {
-				addressingMode = instructions.AddrZeropageX
-			} else if isZeroPage && afterComma == "Y" {
-				addressingMode = instructions.AddrAbsoluteY
-			} else if isAbsolute && afterComma == "X" {
-				addressingMode = instructions.AddrAbsoluteX
-			} else if isAbsolute && afterComma == "Y" {
-				addressingMode = instructions.AddrAbsoluteY
+		switch len(hexNumToken.Token) {
+		case 2: // zeropage | zeropage,X | zeropage,Y
+			if len(operands) == 2 {
+				return instructions.AddrZeropage, nil
+			} else if len(operands) == 4 {
+				regToken := operands[3]
+				switch regToken.Token {
+				case "X":
+					return instructions.AddrZeropageX, nil
+				case "Y":
+					return instructions.AddrZeropageY, nil
+				default:
+					return 0x0, fmt.Errorf("expected zeropage,X or zeropage,Y addressing")
+				}
 			} else {
-				return 0x0, fmt.Errorf("unrecognised addressing mode: %s", operands)
+				return 0x0, fmt.Errorf("invalid zeropage operand")
 			}
+		case 4: // absolute | absolute,X | absolute,Y
+			if len(operands) == 2 {
+				return instructions.AddrAbsolute, nil
+			} else if len(operands) == 4 {
+				regToken := operands[3]
+				switch regToken.Token {
+				case "X":
+					return instructions.AddrAbsoluteX, nil
+				case "Y":
+					return instructions.AddrAbsoluteY, nil
+				default:
+					return 0x0, fmt.Errorf("expected absolute,X or absolute,Y addressing")
+				}
+			} else {
+				return 0x0, fmt.Errorf("invalid absolute operand")
+			}
+		default:
+			return 0x0, fmt.Errorf("expected absolute or zeropage addressing after $")
 		}
-	} else if operands[0] == '(' { // indirect addressing
-		if operands[len(operands)-1] == ')' {
-			// indirectX addressing
-			addressingMode = instructions.AddrIndirectX
-		} else if operands[len(operands)-1] == 'Y' {
-			addressingMode = instructions.AddrIndirectY
-		} else {
-			return 0x0, fmt.Errorf("unimplemented use of addressing mode: %s", operands)
-		}
-	} else {
-		// assume this is a label
-		addressingMode = instructions.AddrImplied
 	}
 
-	return addressingMode, nil
+	// indirect addressing
+	if operands[0].Type == TokenTypeSymbol && operands[0].Token == "(" {
+		lastToken := operands[len(operands)-1]
+		if lastToken.Type == TokenTypeSymbol && lastToken.Token == ")" {
+			return instructions.AddrIndirectX, nil
+		} else if lastToken.Type == TokenTypeString && lastToken.Token == "Y" {
+			return instructions.AddrIndirectY, nil
+		} else {
+			return 0x0, fmt.Errorf("expected valid indirect addressing after (")
+		}
+	}
+
+	return 0x0, fmt.Errorf("unrecognised operand addressing mode")
 }
 
 // hexStringToBytes parses a hex string and returns a little-endian encoded byte array.
@@ -247,104 +191,131 @@ func (assembler *Assembler) Assemble(inputFilePath string) error {
 	}
 	defer inputFile.Close()
 
-	// first pass - convert everything to an AssemblyInstructions & handle definitions
+	// first pass - tokenise everything and convert to respective AssembleyInstruction
 	scanner := bufio.NewScanner(inputFile)
 	assembler.instructions = make([]EncodedInstructionInterface, 0)
 	for scanner.Scan() {
 		line := scanner.Text()
+		tokens := Tokenise(line)
 
-		// sanitise comments
-		beforeComment, _, commentExists := strings.Cut(line, ";")
-		if commentExists {
-			line = beforeComment
-		}
-		line = strings.TrimSpace(line)
+		fmt.Printf("%s = %v\n", line, tokens)
 
-		// skip if empty line
-		if line == "" {
+		if len(tokens) == 0 {
 			continue
 		}
 
-		// check for defining assembler variables here
-		if strings.HasPrefix(line, "define") {
-			definitionSplit := strings.Split(line, " ")
-			if len(definitionSplit) != 3 {
-				return fmt.Errorf("incorrect usage of 'define': %s", line)
+		if tokens[0].Type == TokenTypeString && tokens[0].Token == "define" {
+			// handle definitions
+			// define <string> $<number>
+			// define <string> #$<number>
+			if tokens[1].Type != TokenTypeString {
+				return fmt.Errorf("incorrectly formatted definition %s: expected definition name but got %s",
+					line, tokens[1].Token)
 			}
-			variableName := definitionSplit[1]
-			operandValue := definitionSplit[2]
+			definitionName := tokens[1].Token
 
-			var addressingMode instructions.AddressingMode
-			var intOperand uint16
-
-			if strings.HasPrefix(operandValue, "#$") {
-				// 1byte immediate addressing
-				addressingMode = instructions.AddrImmediate
-				parsedInt, err := strconv.ParseUint(operandValue[2:], 16, 8)
-				if err != nil {
-					return fmt.Errorf("failed to parse integer in definition '%s': %v", line, err)
-				}
-				intOperand = uint16(parsedInt)
-			} else if strings.HasPrefix(operandValue, "$") && len(operandValue) == 3 {
-				// 1byte zeropage addressing
-				addressingMode = instructions.AddrZeropage
-				parsedInt, err := strconv.ParseUint(operandValue[1:], 16, 8)
-				if err != nil {
-					return fmt.Errorf("failed to parse integer in definition '%s': %v", line, err)
-				}
-				intOperand = uint16(parsedInt)
-			} else if strings.HasPrefix(operandValue, "$") && len(operandValue) == 5 {
-				// 2byte absolute addressing
-				addressingMode = instructions.AddrAbsolute
-				parsedInt, err := strconv.ParseUint(operandValue[1:], 16, 16)
-				if err != nil {
-					return fmt.Errorf("failed to parse integer in definition '%s': %v", line, err)
-				}
-				intOperand = uint16(parsedInt)
-			} else {
-				return fmt.Errorf("failed to parse definition '%s': no valid addressing found", line)
+			newDefinition := AssemblyDefinition{
+				name:   definitionName,
+				tokens: tokens,
 			}
 
-			assembler.definitions[variableName] = AssemblyDefinition{
-				name:           variableName,
-				rawOperand:     operandValue,
-				addressingMode: addressingMode,
-				intOperand:     intOperand,
+			switch len(tokens) {
+			case 4:
+				if tokens[2].Type != TokenTypeSymbol || tokens[2].Token != "$" {
+					return fmt.Errorf("incorrectly formatted definition %s: expected $ after %s", line, tokens[1].Token)
+				}
+				if tokens[3].Type != TokenTypeNumber {
+					return fmt.Errorf("incorrectly formatted definition %s: expected number after %s", line, tokens[2].Token)
+				}
+
+				intVal, err := strconv.ParseUint(tokens[3].Token, 16, 0)
+				if err != nil {
+					return fmt.Errorf("incorrectly formatted definition %s: %s is not a valid number", line, tokens[3].Token)
+				}
+				newDefinition.intOperand = uint16(intVal)
+
+				switch len(tokens[3].Token) {
+				case 2:
+					newDefinition.addressingMode = instructions.AddrZeropage
+				case 4:
+					newDefinition.addressingMode = instructions.AddrAbsolute
+				default:
+					return fmt.Errorf("incorrectly formatted definition %s: %s is not a valid zeropage or absolute address", line, tokens[3].Token)
+				}
+			case 5:
+				if tokens[2].Type != TokenTypeSymbol || tokens[2].Token != "#" {
+					return fmt.Errorf("incorrectly formatted definition %s: expected # after %s", line, tokens[1].Token)
+				}
+				if tokens[3].Type != TokenTypeSymbol || tokens[2].Token != "$" {
+					return fmt.Errorf("incorrectly formatted definition %s: expected $ after %s", line, tokens[2].Token)
+				}
+				if tokens[4].Type != TokenTypeNumber {
+					return fmt.Errorf("incorrectly formatted definition %s: expected number after %s", line, tokens[3].Token)
+				}
+				if len(tokens[4].Token) != 2 {
+					return fmt.Errorf("incorrectly formatted definition %s: %s is not a valid hex-encoded immediate byte", line, tokens[4].Token)
+				}
+
+				intVal, err := strconv.ParseUint(tokens[3].Token, 16, 0)
+				if err != nil {
+					return fmt.Errorf("incorrectly formatted definition %s: %s is not a valid number", line, tokens[3].Token)
+				}
+				newDefinition.intOperand = uint16(intVal)
+				newDefinition.addressingMode = instructions.AddrImmediate
 			}
+
+			assembler.definitions[definitionName] = newDefinition
 			continue
-		}
-
-		// Handle labels & instructions
-		if strings.HasSuffix(line, ":") {
-			// this is a line of a label
-			labelName := line[:len(line)-1]
+		} else if tokens[len(tokens)-1].Type == TokenTypeSymbol && tokens[len(tokens)-1].Token == ":" {
+			// Handle labels
+			// <string>:
+			if tokens[0].Type != TokenTypeString {
+				return fmt.Errorf("incorrectly formatted line %s: expected label name before :", line)
+			}
+			if len(tokens) > 2 {
+				return fmt.Errorf("incorrectly formatted label %s: expected <name>:", line)
+			}
+			labelName := tokens[0].Token
 
 			_, found := assembler.definitions[labelName]
 			if found {
 				return fmt.Errorf("conflicting label name %s with variable", labelName)
 			}
 
-			assembler.instructions = append(assembler.instructions, &AssemblyInstructionLabel{
+			instLabel := AssemblyInstructionLabel{
 				RawAssemblyInstruction: RawAssemblyInstruction{
 					rawAssemblyLine: line,
+					tokens:          tokens,
 				},
 				labelName: labelName,
-			})
-			assembler.labels[labelName] = true
-		} else if strings.HasPrefix(line, ".byte") {
-			// this is a line defining some raw byte memory
+			}
+
+			assembler.instructions = append(assembler.instructions, &instLabel)
+			assembler.labels[labelName] = instLabel
+		} else if tokens[0].Type == TokenTypeSymbol && tokens[0].Token == "." {
+			// Handle memory definitions
+			// .<name> "<string>"
+			// .<name> $<number>, $number,...
+			// ...
+			if tokens[1].Type != TokenTypeString {
+				return fmt.Errorf("incorrectly formatted declaration of memory %s: expected a string after .", line)
+			}
 			assembler.instructions = append(assembler.instructions, &AssemblyInstructionMemory{
 				RawAssemblyInstruction: RawAssemblyInstruction{
 					rawAssemblyLine: line,
+					tokens:          tokens,
 				},
 			})
-		} else {
-			// this is an assembly instruction
+		} else if tokens[0].Type == TokenTypeString {
+			// Handle instructions
 			assembler.instructions = append(assembler.instructions, &AssemblyInstructionInstruction{
 				RawAssemblyInstruction: RawAssemblyInstruction{
 					rawAssemblyLine: line,
+					tokens:          tokens,
 				},
 			})
+		} else {
+			return fmt.Errorf("unrecognised assembly line %s", line)
 		}
 	}
 
@@ -369,48 +340,58 @@ func (assembler *Assembler) Assemble(inputFilePath string) error {
 			relativeAddr += inst.memorySize
 
 		case *AssemblyInstructionInstruction:
-			// here we need to get the addressing mode used for this instruction
-			// and then find the instruction
-			var instruction *instructions.Instruction
+			// here we need to get the size of the instruction
+			// we have enough knowledge in order to discover this now
+			// but not the exact instruction in all cases
+			var memorySize uint16
 
-			opcode, operand, hasOperand := strings.Cut(inst.rawAssemblyLine, " ")
-			inst.opcodeString = opcode
-			inst.operand = operand
+			opcodeToken := inst.tokens[0]
+			hasOperand := len(inst.tokens) > 0
 
 			if !hasOperand {
-				instruction = instructions.InstructionFromAssembly(inst.rawAssemblyLine, instructions.AddrImplied)
-				// this is the actual instruction, so may aswell keep it here
+				// this is an non-operand implied opcode
+				// find the instruction and set it
+				instruction := instructions.InstructionFromAssembly(opcodeToken.Token, instructions.AddrImplied)
+				if instruction == nil {
+					return fmt.Errorf("invalid assembly code %s: %s not found or missing operand", inst.rawAssemblyLine, opcodeToken.Token)
+				}
 				inst.instruction = instruction
+				memorySize = uint16(instruction.Size)
 			} else {
-				definition, foundDefinition := assembler.getDefinitionWithinOperand(operand)
-				_, foundLabel := assembler.getLabelWithinOperand(operand)
-				if foundDefinition {
-					// if it contains a definition, grab that to understand the addressing mode here
-					instruction = instructions.InstructionFromAssembly(opcode, definition.addressingMode)
+				operandTokens := inst.tokens[1:]
+				definition, hasDefinition := assembler.getDefinitionWithinOperand(operandTokens)
+				_, foundLabel := assembler.getLabelWithinOperand(operandTokens)
+
+				if hasDefinition {
+					// if it contains a definition, we can use that computed addressing mode here
+					switch definition.addressingMode {
+					case instructions.AddrImmediate, instructions.AddrZeropage:
+						memorySize = uint16(2)
+					case instructions.AddrAbsolute:
+						memorySize = uint16(3)
+					}
 				} else if foundLabel {
-					instruction = instructions.InstructionFromAssembly(opcode, instructions.AddrRelative)
+					// it contains a label, so it is either relative or absolute addressing
+					instruction := instructions.InstructionFromAssembly(opcodeToken.Token, instructions.AddrRelative)
 					if instruction != nil {
 						// this is the actual instruction, so may aswell keep it here
 						inst.instruction = instruction
-					} else { // assume just absolute at this point, but it could be absolute,X or absolute,Y
-						instruction = instructions.InstructionFromAssembly(opcode, instructions.AddrAbsolute)
+						memorySize = uint16(instruction.Size)
+					} else { // it is absolute addressing, so 3 bytes
+						memorySize = uint16(3)
 					}
 				} else {
-					addrMode, err := assembler.getAddressingMode(operand)
+					addrMode, err := assembler.getAddressingModeFromOperand(operandTokens)
 					if err != nil {
-						return fmt.Errorf("invalid operand in line %s", inst.rawAssemblyLine)
+						return fmt.Errorf("invalid assembly code %s: invalid operand for opcode %s: %v", inst.rawAssemblyLine, opcodeToken.Token, err)
 					}
-					instruction = instructions.InstructionFromAssembly(opcode, addrMode)
+					instruction := instructions.InstructionFromAssembly(opcodeToken.Token, addrMode)
 					// this is the actual instruction, so may aswell keep it here
 					inst.instruction = instruction
 				}
 			}
 
-			if instruction == nil {
-				return fmt.Errorf("unknown instruction %s", inst.rawAssemblyLine)
-			}
-
-			inst.memorySize = uint16(instruction.Size)
+			inst.memorySize = memorySize
 			inst.relativeAddr = relativeAddr
 			relativeAddr += inst.memorySize
 		}
