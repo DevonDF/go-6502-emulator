@@ -12,30 +12,55 @@ type AssemblyInstructionMemory struct {
 	RawAssemblyInstruction
 }
 
-func (encodedMemory *AssemblyInstructionMemory) ToByteCode(assembler *Assembler) ([]byte, error) {
-	operands := strings.TrimPrefix(encodedMemory.rawAssemblyLine, ".byte ")
-	operandsSplit := strings.Split(operands, ",")
-
+func (encodedMemory *AssemblyInstructionMemory) decodeBytesTokens() ([]byte, error) {
+	bytesTokens := encodedMemory.tokens[2:]
 	bytecode := make([]byte, 0)
 
-	for _, operand := range operandsSplit {
-		operand = strings.TrimSpace(operand)
-
-		if operand[0] == '"' && operand[len(operand)-1] == '"' {
-			// string
-			for _, char := range operand[1 : len(operand)-1] {
-				bytecode = append(bytecode, petscii.ASCIIToPetcsii[byte(char)])
+	for tokenIndex := 0; tokenIndex < len(bytesTokens); tokenIndex++ {
+		token := bytesTokens[tokenIndex]
+		if token.Type == TokenTypeSymbol && token.Token == "\"" {
+			// read a string
+			for _, strToken := range bytesTokens[tokenIndex+1:] {
+				if strToken.Type == TokenTypeSymbol && strToken.Token == "\"" {
+					break
+				} else {
+					for _, char := range strToken.Token {
+						bytecode = append(bytecode, petscii.ASCIIToPetcsii[byte(char)])
+					}
+				}
+				tokenIndex++
 			}
-		} else if strings.HasPrefix(operand, "0x") {
-			// hex
-			val, err := strconv.ParseUint(operand[2:], 16, 8)
+		} else if token.Type == TokenTypeNumber {
+			val, err := strconv.ParseUint(token.Token, 16, 8)
 			if err != nil {
-				return nil, fmt.Errorf("invalid operand %s: %v", operand, err)
+				return nil, fmt.Errorf("invalid number %s: %v", token.Token, err)
 			}
 			bytecode = append(bytecode, byte(val))
+		} else if token.Type == TokenTypeString {
+			// may be a hex string like 0x00
+			if strings.HasPrefix(token.Token, "0x") {
+				val, err := strconv.ParseUint(token.Token[2:], 16, 8)
+				if err != nil {
+					return nil, fmt.Errorf("invalid number %s: %v", token.Token, err)
+				}
+				bytecode = append(bytecode, byte(val))
+			}
 		}
-
+		tokenIndex++
 	}
 
 	return bytecode, nil
+}
+
+func (encodedMemory *AssemblyInstructionMemory) ToByteCode(assembler *Assembler) ([]byte, error) {
+	memoryTypeToken := encodedMemory.tokens[1]
+
+	switch memoryTypeToken.Token {
+
+	case "byte":
+		return encodedMemory.decodeBytesTokens()
+	default:
+		return nil, fmt.Errorf("invalid memory type %s", memoryTypeToken.Token)
+
+	}
 }

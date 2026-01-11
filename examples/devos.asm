@@ -34,11 +34,11 @@ main:
     STA ZP_ARG0
 
     LDA #>strDevOS ; high byte of strDevOS
-    STA ZP_ARG1
+    STA ZP_ARG0+1
 
     JSR putString ; print
     BRK
 
 
 strDevOS:
-    .byte "DevOS", 0x00
+    .byte "DevOS", $00

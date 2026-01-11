@@ -29,7 +29,7 @@ func (inst *AssemblyInstructionInstruction) ToByteCode(assembler *Assembler) ([]
 	for tokenIndex, token := range operandTokens {
 		if token.Type == TokenTypeString {
 			// check if this is a label or definition
-			labelInst, isLabel := assembler.labels[token.Token]
+			labelInst, isLabel := assembler.getLabelByLabelName(token.Token)
 			definition, isDefinition := assembler.definitions[token.Token]
 
 			// assembly-operators

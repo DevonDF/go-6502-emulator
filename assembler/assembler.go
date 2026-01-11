@@ -49,12 +49,24 @@ func NewAssembler(loadAddress uint16) *Assembler {
 	}
 }
 
+func (assembler *Assembler) getLabelByLabelName(labelName string) (*AssemblyInstructionLabel, bool) {
+	for _, inst := range assembler.instructions {
+		labelInst, ok := inst.(*AssemblyInstructionLabel)
+		if !ok {
+			continue
+		}
+		if labelName == labelInst.labelName {
+			return labelInst, true
+		}
+	}
+	return nil, false
+}
+
 func (assembler *Assembler) getLabelWithinOperand(operandTokens []Token) (*AssemblyInstructionLabel, bool) {
 	for _, token := range operandTokens {
-		for labelName, labelInst := range assembler.labels {
-			if token.Token == labelName {
-				return &labelInst, true
-			}
+		labelInst, found := assembler.getLabelByLabelName(token.Token)
+		if found {
+			return labelInst, true
 		}
 	}
 	return nil, false
@@ -70,19 +82,6 @@ func (assembler *Assembler) getDefinitionWithinOperand(operandTokens []Token) (*
 		}
 	}
 	return nil, false
-}
-
-func (assembler *Assembler) readNumberStringFromString(str string) string {
-	intStr := ""
-	for _, chRune := range str {
-		char := string(chRune)
-		_, err := strconv.Atoi(string(char))
-		if err != nil {
-			continue
-		}
-		intStr += char
-	}
-	return intStr
 }
 
 // getAddressingModeFromOperand returns the AddressingMode used in the provided operand tokens.
@@ -114,36 +113,24 @@ func (assembler *Assembler) getAddressingModeFromOperand(operands []Token) (inst
 
 		switch len(hexNumToken.Token) {
 		case 2: // zeropage | zeropage,X | zeropage,Y
-			if len(operands) == 2 {
+			lastToken := operands[len(operands)-1]
+			switch lastToken.Token {
+			case "X":
+				return instructions.AddrZeropageX, nil
+			case "Y":
+				return instructions.AddrZeropageY, nil
+			default:
 				return instructions.AddrZeropage, nil
-			} else if len(operands) == 4 {
-				regToken := operands[3]
-				switch regToken.Token {
-				case "X":
-					return instructions.AddrZeropageX, nil
-				case "Y":
-					return instructions.AddrZeropageY, nil
-				default:
-					return 0x0, fmt.Errorf("expected zeropage,X or zeropage,Y addressing")
-				}
-			} else {
-				return 0x0, fmt.Errorf("invalid zeropage operand")
 			}
 		case 4: // absolute | absolute,X | absolute,Y
-			if len(operands) == 2 {
+			lastToken := operands[len(operands)-1]
+			switch lastToken.Token {
+			case "X":
+				return instructions.AddrAbsoluteX, nil
+			case "Y":
+				return instructions.AddrAbsoluteY, nil
+			default:
 				return instructions.AddrAbsolute, nil
-			} else if len(operands) == 4 {
-				regToken := operands[3]
-				switch regToken.Token {
-				case "X":
-					return instructions.AddrAbsoluteX, nil
-				case "Y":
-					return instructions.AddrAbsoluteY, nil
-				default:
-					return 0x0, fmt.Errorf("expected absolute,X or absolute,Y addressing")
-				}
-			} else {
-				return 0x0, fmt.Errorf("invalid absolute operand")
 			}
 		default:
 			return 0x0, fmt.Errorf("expected absolute or zeropage addressing after $")
@@ -162,7 +149,7 @@ func (assembler *Assembler) getAddressingModeFromOperand(operands []Token) (inst
 		}
 	}
 
-	return 0x0, fmt.Errorf("unrecognised operand addressing mode")
+	return 0x0, fmt.Errorf("unrecognised operand addressing mode for %v", operands)
 }
 
 // hexStringToBytes parses a hex string and returns a little-endian encoded byte array.
@@ -197,8 +184,6 @@ func (assembler *Assembler) Assemble(inputFilePath string) error {
 	for scanner.Scan() {
 		line := scanner.Text()
 		tokens := Tokenise(line)
-
-		fmt.Printf("%s = %v\n", line, tokens)
 
 		if len(tokens) == 0 {
 			continue
@@ -282,16 +267,13 @@ func (assembler *Assembler) Assemble(inputFilePath string) error {
 				return fmt.Errorf("conflicting label name %s with variable", labelName)
 			}
 
-			instLabel := AssemblyInstructionLabel{
+			assembler.instructions = append(assembler.instructions, &AssemblyInstructionLabel{
 				RawAssemblyInstruction: RawAssemblyInstruction{
 					rawAssemblyLine: line,
 					tokens:          tokens,
 				},
 				labelName: labelName,
-			}
-
-			assembler.instructions = append(assembler.instructions, &instLabel)
-			assembler.labels[labelName] = instLabel
+			})
 		} else if tokens[0].Type == TokenTypeSymbol && tokens[0].Token == "." {
 			// Handle memory definitions
 			// .<name> "<string>"
@@ -388,6 +370,7 @@ func (assembler *Assembler) Assemble(inputFilePath string) error {
 					instruction := instructions.InstructionFromAssembly(opcodeToken.Token, addrMode)
 					// this is the actual instruction, so may aswell keep it here
 					inst.instruction = instruction
+					memorySize = uint16(instruction.Size)
 				}
 			}
 
