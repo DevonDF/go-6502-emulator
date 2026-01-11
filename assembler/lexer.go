@@ -70,3 +70,11 @@ func Tokenise(line string) []Token {
 
 	return tokens
 }
+
+func TokensToString(tokens []Token) string {
+	tokenStr := ""
+	for _, token := range tokens {
+		tokenStr += token.Token + " "
+	}
+	return tokenStr
+}

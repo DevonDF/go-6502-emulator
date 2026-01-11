@@ -14,13 +14,13 @@ JMP main
 
 ; utility functions
 
-; putString prints a string held at ZP_ARG0
+; putString prints a string held at ZP_ARG0 to the location starting at ZP_ARG1
 putString:
     LDY #$00 ; Y is our index variable for the string
     _putStringLoop:
         LDA (ZP_ARG0),Y ; load into A the Y'th element of the string given in ZP_ARG0
         BEQ _putStringRet ; if it's 0x00 i.e. null byte, lets return, we're done here
-        STA $4000,Y ; print it to the screen at 0,Y 
+        STA (ZP_ARG1),Y ; print it to the screen at ZP_ARG1,Y 
         INY ; increment Y
         JMP _putStringLoop ; jump back
     _putStringRet:
@@ -30,15 +30,42 @@ putString:
 ; main
 main:
     ; start by printing DevOS
+
+    ; first argument - print the string strDevOS
     LDA #<strDevOS ; low byte of strDevOS
     STA ZP_ARG0
-
     LDA #>strDevOS ; high byte of strDevOS
     STA ZP_ARG0+1
 
+    ; second argument - print to $4000
+    LDA #$00
+    STA ZP_ARG1
+    LDA #$40
+    STA ZP_ARG1+1
+
     JSR putString ; print
+
+    ; print the command entry prompt
+
+    ; first argument - print the string strEnterCommand
+    LDA #<strEnterCommand
+    STA ZP_ARG0
+    LDA #>strEnterCommand
+    STA ZP_ARG0+1
+
+    ; second argument - print to $4010
+    LDA #$10
+    STA ZP_ARG1
+    LDA #$40
+    STA ZP_ARG1+1
+
+    JSR putString
+    
     BRK
 
 
 strDevOS:
     .byte "DevOS", $00
+
+strEnterCommand:
+    .byte "Enter Command: ", $00

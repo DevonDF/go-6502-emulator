@@ -354,14 +354,28 @@ func (assembler *Assembler) Assemble(inputFilePath string) error {
 					}
 				} else if foundLabel {
 					// it contains a label, so it is either relative or absolute addressing
-					instruction := instructions.InstructionFromAssembly(opcodeToken.Token, instructions.AddrRelative)
-					if instruction != nil {
-						// this is the actual instruction, so may aswell keep it here
-						inst.instruction = instruction
-						memorySize = uint16(instruction.Size)
-					} else { // it is absolute addressing, so 3 bytes
-						memorySize = uint16(3)
+					// it can also be zeropage/absolute if there's some assembly operation beforehand like < or >
+					hasMinifier := false
+					for _, token := range inst.tokens {
+						if token.Token == "<" || token.Token == ">" {
+							hasMinifier = true
+							break
+						}
 					}
+
+					if hasMinifier {
+						memorySize = uint16(2)
+					} else {
+						instruction := instructions.InstructionFromAssembly(opcodeToken.Token, instructions.AddrRelative)
+						if instruction != nil {
+							// this is the actual instruction, so may aswell keep it here
+							inst.instruction = instruction
+							memorySize = uint16(instruction.Size)
+						} else { // it is absolute addressing, so 3 bytes
+							memorySize = uint16(3)
+						}
+					}
+
 				} else {
 					addrMode, err := assembler.getAddressingModeFromOperand(operandTokens)
 					if err != nil {
@@ -387,19 +401,21 @@ func (assembler *Assembler) Assemble(inputFilePath string) error {
 	for _, assemblyLine := range assembler.instructions {
 		switch inst := assemblyLine.(type) {
 
-		case *AssemblyInstructionMemory:
-			bytecode, err := inst.ToByteCode(assembler)
-			if err != nil {
-				return fmt.Errorf("failed to assemble instruction %s: %v", inst.rawAssemblyLine, err)
-			}
-			assembler.bytecode = append(assembler.bytecode, bytecode...)
-
 		case *AssemblyInstructionInstruction:
 			bytecode, err := inst.ToByteCode(assembler)
 			if err != nil {
 				return fmt.Errorf("failed to assemble instruction %s: %v", inst.rawAssemblyLine, err)
 			}
 			assembler.bytecode = append(assembler.bytecode, bytecode...)
+			fmt.Printf("%04X\t%s\n", inst.relativeAddr, TokensToString(inst.tokens))
+
+		case *AssemblyInstructionMemory:
+			bytecode, err := inst.ToByteCode(assembler)
+			if err != nil {
+				return fmt.Errorf("failed to assemble instruction %s: %v", inst.rawAssemblyLine, err)
+			}
+			assembler.bytecode = append(assembler.bytecode, bytecode...)
+			fmt.Printf("%04X\t%s\n", inst.relativeAddr, TokensToString(inst.tokens))
 		}
 	}
 

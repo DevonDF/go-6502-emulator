@@ -38,6 +38,7 @@ func (memory *Memory) Write(address uint16, data []byte) error {
 		return errors.New("out of bound write")
 	}
 	copy(memory.memory[int(address):], data)
+	memory.logger.Debug("write bytes to memory", "address", address, "data", data)
 	return nil
 }
 
@@ -46,6 +47,7 @@ func (memory *Memory) ReadByte(address uint16) (byte, error) {
 	if int(address) > len(memory.memory) {
 		return 0x0, errors.New("out of bound read")
 	}
+	memory.logger.Debug("read byte from memory", "address", address, "value", memory.memory[int(address)])
 	return memory.memory[int(address)], nil
 }
 
